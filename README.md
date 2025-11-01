@@ -1,34 +1,33 @@
-# BAwiki — 建築音響 Knowledge Base
+---
+layout: default
+title: BAwiki
+---
 
-**目的**  
-建築音響の知見を「**用途 × 技術**」で横断できるよう最小コストで運用・拡張できるWiki（Jekyll + GitHub Pages）。  
-— 日本語を先行、将来は英語追加。図表・写真は自己提供。数式はMathJax対応。
+# 建築音響 Wiki（用途 × 技術）
 
-## すぐに公開する手順（GitHub Pages / Jekyll 有効）
-1. GitHubで新規リポジトリを作成（例：`BAwiki`）。  
-2. このリポジトリに本フォルダ一式をアップロード（`_config.yml` と `index.md` があればJekyllが動作）。  
-3. GitHubリポジトリ → **Settings** → **Pages** → **Build and deployment**  
-   - **Source**: *Deploy from a branch*  
-   - **Branch**: `main` / `/root` を選択 → **Save**  
-   - 数十秒後、`https://<username>.github.io/BAwiki/` で公開。  
-4. サイトURLに合わせて `_config.yml` の `url` と `baseurl` を設定。
+**目的**: 実務者向けの知識ベース（まず日本語）。  
+図表は自己提供、数式は MathJax 対応。
 
-> **プロジェクトサイト**構成推奨：`url: https://<username>.github.io`、`baseurl: "/BAwiki"`。  
-> **ユーザーサイト**として運用する場合はリポジトリ名を `<username>.github.io` とし、`baseurl: ""`。
+## 索引（手動リンク）
+### 用途（Use）
+- [ホテル](/use/hotel.md)
+- [共同住宅](/use/apartment.md)
+- [オフィス](/use/office.md)
+- [学校](/use/school.md)
+- [病院](/use/hospital.md)
+- [店舗](/use/retail.md)
+- [フィットネス](/use/fitness.md)
+- [スタジオ](/use/studio.md)
+- [工場](/use/factory.md)
 
-## 情報設計
-- 実体は **`_notes/`** コレクションに集約（Front-matterで `用途` と `技術` を**別配列**で保持）。
-- **用途** と **技術** の索引ページから交差的に辿れる。  
-- JSの重いインタラクティブは `assets/tools/<tool>/index.html` に置き、Markdownから**リンク or iframe埋め込み**。
+### 技術（Tech）
+- [床衝撃音](/tech/impact-sound.md)
+- [空気音遮断](/tech/airborne-sound-insulation.md)
+- [開口部（サッシ・ドア）](/tech/openings.md)
+- [遮音壁・浮き床](/tech/partitions-floating-floors.md)
+- [天井](/tech/ceilings.md)
+- [設備騒音](/tech/building-services-noise.md)
+- [室内音響（残響・拡散）](/tech/room-acoustics.md)
 
-## ライセンス
-- **コンテンツ（文章・図表・画像）**: CC0 1.0（一切の権利を放棄 / Public Domain）  
-- **コード（スクリプト・スニペット）**: MIT License  
-必要に応じて変更可。詳しくは `LICENSE` と `LICENSE-CODE` を参照。
-
-## ローカルプレビュー（任意）
-```bash
-bundle install
-bundle exec jekyll serve
-# http://127.0.0.1:4000/BAwiki/  (baseurlに応じて変化)
-```
+## Notes
+記事本体は `/notes/` に置いて、用途・技術のページから**手動で**リンクしていきます（最初は手で良いです）。
