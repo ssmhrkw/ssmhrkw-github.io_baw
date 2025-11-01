@@ -1,7 +1,7 @@
 title: BAwiki — 建築音響 Knowledge Base
 description: 建築音響を「用途 × 技術」で横断できる実務者向けWiki（Liquid対応）
-baseurl: ""    # Project site の場合は "/<repo-name>" に変更
-url: ""
+baseurl: "/ssmhrkw-github.io_baw"  
+url: "https://ssmhrkw.github.io"
 
 theme: jekyll-theme-primer
 
