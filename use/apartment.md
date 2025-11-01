@@ -1,17 +1,11 @@
 ---
 layout: default
 title: 共同住宅
-parent: 用途
-nav_order: 2
 ---
 
-# 共同住宅 × 全技術
+# 共同住宅 — 関連記事（例）
 
-{% assign items = site.notes | where_exp: "item", "item.用途 contains '共同住宅'" | sort: "title" %}
-{% if items.size > 0 %}
-{% for p in items %}
-- [{{ p.title }}]({{ p.url }}) — {{ p.description | default: '' }}
-{% endfor %}
-{% else %}
-（まだ該当記事がありません）
-{% endif %}
+下のリンクを増やしていってください。
+
+- [共同住宅における空気音遮断の基本](/notes/apartment-airborne-basics.md)
+- [共同住宅における床衝撃音の基本](/notes/apartment-impact-basics.md)
