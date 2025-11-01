@@ -5,16 +5,61 @@
   <title>{{ page.title | default: site.title }}</title>
   {% include head_custom.html %}
   <style>
-    body{font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;margin:18px;line-height:1.7;color:#111}
-    h1,h2{color:#0b2f7a}
-    a{color:#0b58d6}
-    .container{max-width:1000px;margin:0 auto;padding:6px}
-    .meta {color:#666;font-size:0.95rem;margin-bottom:0.5rem;}
-    ul.notes {padding-left:1rem}
+/* layout base (確実に container を持たせる) */
+body{font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;margin:18px;line-height:1.7;color:#111}
+.container{max-width:1000px;margin:0 auto;padding:6px}
+
+/* ナビ用 */
+.site-header{background:#f8fafc;border-bottom:1px solid #e6edf6;padding:10px 0;margin-bottom:18px}
+.nav-wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-weight:700;color:#0b2f7a;text-decoration:none}
+.site-nav a{margin-left:12px;text-decoration:none;color:#0b58d6;font-weight:500}
+.site-nav a[aria-current="page"]{font-weight:700;text-decoration:underline;color:#05366b}
+
+@media (max-width:640px){
+  .nav-wrap{flex-direction:row;justify-content:space-between;gap:8px}
+  .site-nav a{margin-left:8px;font-size:0.95rem}
+  .site-nav{display:flex;flex-wrap:wrap;gap:6px}
+}
+
+/* skip link for keyboard users */
+.skip-link{
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.skip-link:focus{
+  left: 8px;
+  top: 8px;
+  width: auto;
+  height: auto;
+  background:#fff;
+  padding:6px 10px;
+  border:1px solid #ddd;
+  z-index:1000;
+}
   </style>
 </head>
 <body>
-  <main class="container">
+  <a class="skip-link" href="#content">Skip to content</a>
+
+  <header class="site-header" role="banner">
+    <div class="nav-wrap container">
+      <a class="brand" href="{{ "/" | relative_url }}">{{ site.title | default: "BAwiki" }}</a>
+
+      <nav class="site-nav" role="navigation" aria-label="メインナビ">
+        <a href="{{ "/" | relative_url }}" {% if page.url == "/" or page.url == site.baseurl or page.url == site.baseurl | append: "/" %}aria-current="page"{% endif %}>Home</a>
+        <a href="{{ "/use/" | relative_url }}" {% if page.url contains '/use/' %}aria-current="page"{% endif %}>用途</a>
+        <a href="{{ "/tech/" | relative_url }}" {% if page.url contains '/tech/' %}aria-current="page"{% endif %}>技術</a>
+        <a href="{{ "/search/" | relative_url }}" {% if page.url contains '/search/' %}aria-current="page"{% endif %}>Search</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="content" class="container">
     {{ content }}
   </main>
 </body>
