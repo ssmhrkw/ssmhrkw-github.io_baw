@@ -1,0 +1,43 @@
+title: BAwiki — 建築音響 Knowledge Base
+description: 建築音響を「用途 × 技術」で横断できる実務者向けWiki
+baseurl: "" # e.g. /BAwiki  (後でGitHub PagesのProjectサイトに合わせて設定)
+url: ""     # e.g. https://<your-username>.github.io
+
+# Theme & plugins
+# GitHub Pagesで許可されているremote_themeを使用（just-the-docsは検索機能あり）
+remote_theme: just-the-docs/just-the-docs
+plugins:
+  - jekyll-remote-theme
+
+# Markdown & MathJax
+markdown: kramdown
+kramdown:
+  input: GFM
+  math_engine: mathjax
+  syntax_highlighter: rouge
+
+# Collections（実体は _notes/ 内、出力は /notes/ に）
+collections:
+  notes:
+    output: true
+    permalink: /notes/:name/
+
+# 既定メタデータ
+defaults:
+  - scope:
+      path: ""
+      type: notes
+    values:
+      layout: default
+      lang: ja
+      toc: true
+
+# ナビ（just-the-docs）
+just_the_docs:
+  logo: ""     # 追加する場合は assets/img/logo.svg
+  search_enabled: true
+  search_tokenizer_separator: /[\s/]+/
+  aux_nav:
+    "GitHub":
+      - url: https://github.com/<your-username>/<your-repo>
+        title: Repo
