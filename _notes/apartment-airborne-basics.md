@@ -9,4 +9,4 @@ description: 設計・測定の最小構成
 - 計算例、測定方法は下記参照。
 
 ## 数式（MathJax）
-透過損失の簡易式: $R = 10 \\log_{10}\\frac{W_i}{W_t}$
+: $R = 10 \\log_{10}\\frac{W_i}{W_t}$
