@@ -1,0 +1,18 @@
+---
+layout: none
+permalink: /search.json
+---
+[
+{% assign notes = site.notes | sort: "title" %}
+{% for p in notes %}
+{
+  "id": "{{ p.url | relative_url }}",
+  "title": {{ p.title | jsonify }},
+  "content": {{ p.content | strip_html | strip_newlines | normalize_whitespace | jsonify }},
+  "description": {{ p.description | default: "" | jsonify }},
+  "用途": {{ p['用途'] | default: [] | join: " " | jsonify }},
+  "技術": {{ p['技術'] | default: [] | join: " " | jsonify }},
+  "date": {{ p.date | date: "%Y-%m-%d" | jsonify }}
+}{% if forloop.last == false %},{% endif %}
+{% endfor %}
+]
