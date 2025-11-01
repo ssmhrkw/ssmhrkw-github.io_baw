@@ -13,14 +13,14 @@ title: BAwiki — 建築音響 Knowledge Base
 ## 新着ノート（自動）
 {% assign notes = site.notes | default: "" | split: "" %}
 {% if notes != empty %}
-  {% assign notes = site.notes | sort: "title" %}
-  <ul class="notes">
-  {% for p in notes %}
-    <li><a href="{{ p.url | relative_url }}">{{ p.title }}</a> <span class="meta">— {{ p.description | default: "" }}</span></li>
+  {% assign notes = site.notes | sort: "date" | reverse %}
+  <ul>
+  {% for p in notes limit:8 %}
+    <li><a href="{{ p.url | relative_url }}">{{ p.title }}</a> — {{ p.date | date: "%Y-%m-%d" }}</li>
   {% endfor %}
   </ul>
 {% else %}
-（まだノートが登録されていません）
+（ノート未登録）
 {% endif %}
 
 ## 索引
