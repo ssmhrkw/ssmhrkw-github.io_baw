@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>床衝撃音 再生ポータル（欠品表示つき）</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 20px;
+    }
+
+    h1 {
+      margin-bottom: 0.5rem;
+    }
+
+    #plan-image {
+      max-width: 50%;
+      height: auto;
+      border: 1px solid #ccc;
+      margin-bottom: 1.5rem;
+    }
+
+    /* 音源選択 */
+    #source-selector {
+      margin-bottom: 1rem;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #fafafa;
+      display: inline-block;
+    }
+    #source-selector label {
+      margin-right: 1rem;
+      cursor: pointer;
+    }
+    #source-selector span {
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    /* マトリクス（G…A × 5…1） */
+    #matrix {
+      margin-bottom: 1rem;
+    }
+    #matrix table {
+      border-collapse: collapse;
+    }
+    #matrix th,
+    #matrix td {
+      border: 1px solid #ccc;
+      padding: 4px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    #matrix th {
+      background: #f0f0f0;
+      font-weight: bold;
+    }
+    .matrix-row-label {
+      background: #f9f9f9;
+      font-weight: bold;
+      width: 30px;
+    }
+    .matrix-button {
+      padding: 4px 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: #f5f5f5;
+      border-radius: 3px;
+      font-size: 12px;
+      width: 40px;
+      box-sizing: border-box;
+    }
+    /* 特別位置用の色（F4, F2, D3, B4, B2） */
+    .matrix-button.special-pos {
+      background: #fff5c4;
+      border-color: #e0b000;
+    }
+    .matrix-button.active {
+      background: #4285f4;
+      color: #fff;
+      border-color: #3367d6;
+      font-weight: bold;
+    }
+
+    /* 再生テーブル */
+    #position-title {
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    table.audio-table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 900px;
+    }
+    table.audio-table th,
+    table.audio-table td {
+      border: 1px solid #aaa;
+      padding: 4px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    table.audio-table th {
+      background: #f0f0f0;
+    }
+    .row-label {
+      width: 70px;
+      font-weight: bold;
+      background: #f9f9f9;
+    }
+    audio {
+      width: 160px;
+    }
+
+    /* ファイル欠品セル表示 */
+    .missing-cell {
+      background: #eee;
+      color: #999;
+      font-size: 0.85rem;
+    }
+
+    .legend {
+      font-size: 0.8rem;
+      color: #555;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>床衝撃音サンプル再生 B 残響室床開口部</h1>
+  <p>測定点配置図：</p>
+
+  <img
+    id="plan-image"
+    src="audio/BRI_RevChamber/measurementlocation.png"
+    alt="測定点配置図"
+  />
+
+  <!-- 音源種類の切り替え -->
+  <div id="source-selector">
+    <span>音源種類:</span>
+    <label>
+      <input type="radio" name="sourceType" value="tapping" checked />
+      Tapping Machine
+    </label>
+    <label>
+      <input type="radio" name="sourceType" value="tire" />
+      Tire
+    </label>
+    <label>
+      <input type="radio" name="sourceType" value="ball" />
+      Ball
+    </label>
+  </div>
+
+  <p style="font-size: 0.85rem; color: #555; margin-top: 0;">
+    ※表頭の「距離」はマイクロホンからの距離を示し、対応するチャンネル番号は音源ファイル名の末尾「CHx」に対応しています。<br>
+    ※音源種類を切り替えると、現在選択中の位置のテーブルが再描画されます。<br>
+    ※B2,B4,D3,F2,F4の測定位置はPatternAからJまで全ての音源ファイルが存在します。その他の測定位置にはパターンC,D,E,G,Iの測定結果がありません。
+  </p>
+
+  <!-- 位置選択マトリクス -->
+  <div id="matrix"></div>
+
+  <!-- 選択された位置のタイトル -->
+  <h2 id="position-title">測定位置 -</h2>
+
+  <!-- 再生テーブル -->
+  <div id="audio-table-container"></div>
+  <div class="legend">
+
+  </div>
+
+  <script>
+    // ===== 設定パラメータ =====
+
+    // パターン A〜J
+    const PATTERNS = ["A","B","C","D","E","F","G","H","I","J"];
+
+    // 位置記号 A〜G, 番号 1〜5
+    const POS_LETTERS = ["A","B","C","D","E","F","G"];
+    const POS_NUMBERS = [1,2,3,4,5];
+
+    // マトリクス表示用（横 G..A, 縦 5..1）
+    const LETTERS_FOR_MATRIX = ["G","F","E","D","C","B","A"];
+    const NUMBERS_FOR_MATRIX = [5,4,3,2,1];
+
+    // 特別に色を変える位置
+    const SPECIAL_POSITIONS = ["F4","F2","D3","B4","B2"];
+
+    // 距離とチャンネル
+    const DISTANCES = [
+      { label: "10 cm",  ch: 4 },
+      { label: "40 cm",  ch: 5 },
+      { label: "70 cm",  ch: 6 },
+      { label: "100 cm", ch: 7 },  // 100 cm
+      { label: "130 cm", ch: 8 }
+    ];
+
+    // 音源種類ごとのフォルダ名 & ファイル名トークン
+    const SOURCE_CONFIG = {
+      tapping: { folder: "tapping", token: "tap"  },
+      tire:    { folder: "tire",    token: "bang" },
+      ball:    { folder: "ball",    token: "ball" }
+    };
+
+    let currentSourceType = "tapping";
+    let currentPosition   = "A1";  // 初期位置
+
+    function makeFilePath(sourceType, pattern, pos, ch) {
+      const cfg = SOURCE_CONFIG[sourceType];
+      return `audio/BRI_RevChamber/${cfg.folder}/Pattern_${pattern}_${cfg.token}_${pos}_CH${ch}.wav`;
+    }
+
+    // ===== マトリクス作成 =====
+    function createMatrix() {
+      const container = document.getElementById("matrix");
+      const table = document.createElement("table");
+
+      // ヘッダ行（空白 + G..A）
+      const headerTr = document.createElement("tr");
+      const blankTh  = document.createElement("th");
+      blankTh.textContent = "";
+      headerTr.appendChild(blankTh);
+      LETTERS_FOR_MATRIX.forEach(letter => {
+        const th = document.createElement("th");
+        th.textContent = letter;
+        headerTr.appendChild(th);
+      });
+      table.appendChild(headerTr);
+
+      // 各行（5..1）
+      NUMBERS_FOR_MATRIX.forEach(num => {
+        const tr = document.createElement("tr");
+
+        const rowLabel = document.createElement("td");
+        rowLabel.className = "matrix-row-label";
+        rowLabel.textContent = num;
+        tr.appendChild(rowLabel);
+
+        LETTERS_FOR_MATRIX.forEach(letter => {
+          const td = document.createElement("td");
+          const pos = `${letter}${num}`;
+
+          const btn = document.createElement("button");
+          btn.className = "matrix-button";
+          btn.dataset.pos = pos;
+          btn.textContent = pos;
+
+          // 特別位置ならクラスを追加
+          if (SPECIAL_POSITIONS.includes(pos)) {
+            btn.classList.add("special-pos");
+          }
+
+          btn.addEventListener("click", () => {
+            currentPosition = pos;
+            updateActiveButtons();
+            renderPositionTable();
+          });
+
+          td.appendChild(btn);
+          tr.appendChild(td);
+        });
+
+        table.appendChild(tr);
+      });
+
+      container.appendChild(table);
+      updateActiveButtons(); // 初期 A1 を active に
+    }
+
+    function updateActiveButtons() {
+      const buttons = document.querySelectorAll(".matrix-button");
+      buttons.forEach(btn => {
+        if (btn.dataset.pos === currentPosition) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+    }
+
+    // ===== 再生テーブル描画 =====
+    function renderPositionTable() {
+      const titleEl   = document.getElementById("position-title");
+      const container = document.getElementById("audio-table-container");
+
+      titleEl.textContent = `測定位置 ${currentPosition}`;
+      container.innerHTML = ""; // 一旦クリア
+
+      const table = document.createElement("table");
+      table.className = "audio-table";
+
+      // thead
+      const thead = document.createElement("thead");
+      const headRow = document.createElement("tr");
+      const emptyTh = document.createElement("th");
+      headRow.appendChild(emptyTh);
+      DISTANCES.forEach(d => {
+        const th = document.createElement("th");
+        th.textContent = d.label;
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      // tbody
+      const tbody = document.createElement("tbody");
+
+      PATTERNS.forEach(pattern => {
+        const tr = document.createElement("tr");
+
+        const rowLabel = document.createElement("td");
+        rowLabel.className = "row-label";
+        rowLabel.textContent = `Pattern ${pattern}`;
+        tr.appendChild(rowLabel);
+
+        DISTANCES.forEach(d => {
+          const td = document.createElement("td");
+
+          const audio = document.createElement("audio");
+          audio.controls = true;
+
+          audio.dataset.pattern = pattern;
+          audio.dataset.pos     = currentPosition;
+          audio.dataset.ch      = String(d.ch);
+
+          const src = makeFilePath(currentSourceType, pattern, currentPosition, d.ch);
+          audio.src = src;
+
+          // 読み込み失敗時：セルを「－」表示に置き換える
+          audio.addEventListener("error", () => {
+            td.classList.add("missing-cell");
+            td.textContent = "－";
+            console.warn("Missing or unreadable audio file:", src);
+          });
+
+          td.appendChild(audio);
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+
+    // ===== 音源タイプ切り替え =====
+    function setupSourceSelector() {
+      const radios = document.querySelectorAll('input[name="sourceType"]');
+      radios.forEach(radio => {
+        radio.addEventListener("change", () => {
+          if (!radio.checked) return;
+          currentSourceType = radio.value;
+          renderPositionTable(); // 現在位置を再描画
+        });
+      });
+    }
+
+    // ===== 初期化 =====
+    document.addEventListener("DOMContentLoaded", () => {
+      createMatrix();
+      setupSourceSelector();
+      renderPositionTable(); // A1 から開始
+    });
+  </script>
+</body>
+</html>
