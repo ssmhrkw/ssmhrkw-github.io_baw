@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>床衝撃音 再生ポータル</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 20px;
+    }
+
+    h1 {
+      margin-bottom: 0.5rem;
+    }
+
+    #plan-image {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #ccc;
+      margin-bottom: 1.5rem;
+    }
+
+    /* タブ部分 */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .tab-button {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: #f5f5f5;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .tab-button.active {
+      background: #4285f4;
+      color: #fff;
+      border-color: #3367d6;
+      font-weight: bold;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    th, td {
+      border: 1px solid #aaa;
+      padding: 4px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f0f0f0;
+    }
+
+    .row-label {
+      width: 70px;
+      font-weight: bold;
+      background: #f9f9f9;
+    }
+
+    audio {
+      width: 160px; /* 必要に応じて調整 */
+    }
+  </style>
+</head>
+<body>
+
+  <h1>床衝撃音サンプル再生</h1>
+  <p>測定点配置図：</p>
+
+  <!-- スクショ画像（パスは環境に合わせて変更） -->
+  <img
+    id="plan-image"
+    src="/mnt/data/スクリーンショット 2025-11-21 172325.png"
+    alt="測定点配置図"
+  />
+
+  <!-- タブボタン 1〜10 -->
+  <div class="tabs" id="tabs">
+    <!-- JS で自動生成してもいいけど、ここでは素直に手書き -->
+    <button class="tab-button active" data-tab="1">1</button>
+    <button class="tab-button" data-tab="2">2</button>
+    <button class="tab-button" data-tab="3">3</button>
+    <button class="tab-button" data-tab="4">4</button>
+    <button class="tab-button" data-tab="5">5</button>
+    <button class="tab-button" data-tab="6">6</button>
+    <button class="tab-button" data-tab="7">7</button>
+    <button class="tab-button" data-tab="8">8</button>
+    <button class="tab-button" data-tab="9">9</button>
+    <button class="tab-button" data-tab="10">10</button>
+  </div>
+
+  <!-- タブごとのコンテンツ：ここでは 1〜10 をほぼ同じ形で用意 -->
+  <!-- ★filename の命名ルール例：
+       audio/pos{測定位置}_{状態}_{距離}.wav
+       例: audio/pos1_su_10cm.wav, audio/pos1_2_40cm.wav ...
+       実際の WAV 名に合わせて src="" を書き換えてください。
+  -->
+
+  <!-- ---- Tab 1 ---- -->
+  <div class="tab-content active" id="tab-1">
+    <h2>測定位置 1</h2>
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>10 cm</th>
+          <th>40 cm</th>
+          <th>70 cm</th>
+          <th>100 cm</th>
+          <th>130 cm</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 行：素 -->
+        <tr>
+          <td class="row-label">素</td>
+          <td><audio controls src="audio/pos1_su_10cm.wav"></audio></td>
+          <td><audio controls src="audio/pos1_su_40cm.wav"></audio></td>
+          <td><audio controls src="audio/pos1_su_70cm.wav"></audio></td>
+          <td><audio controls src="audio/pos1_su_100cm.wav"></audio></td>
+          <td><audio controls src="audio/pos1_su_130cm.wav"></audio></td>
+        </tr>
+        <!-- 行：２ -->
+        <tr>
+          <td class="row-label">２</td>
+          <td><audio controls src="audio/pos1_2_10cm.wav"></audio></td>
+          <td><audio controls src="audio/pos1_2_40cm.wav"></audio></td>
+          <td><audio controls src="audio/pos1_2_70cm.wav"></audio></td>
+          <td><audio controls src="audio/pos1_2_100cm.wav"></audio></td>
+          <td><audio controls src="audio/pos1_2_130cm.wav"></audio></td>
+        </tr>
+        <!-- 行：１ -->
+        <tr>
+          <td class="row-label">１</td>
+          <td><audio controls src="audio/pos1_1_10cm.wav"></audio></td>
+          <td><audio controls src="audio/pos1_1_40cm.wav"></audio></td>
+          <td><audio controls src="audio/pos1_1_70cm.wav"></audio></td>
+          <td><audio controls src="audio/pos1_1_100cm.wav"></audio></td>
+          <td><audio controls src="audio/pos1_1_130cm.wav"></audio></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ---- Tab 2〜10 は Tab1 をコピペして、pos番号だけ変えてください ---- -->
+  <!-- 以下は Tab2 の例（pos2_〜 にしてあるだけ） -->
+
+  <div class="tab-content" id="tab-2">
+    <h2>測定位置 2</h2>
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>10 cm</th>
+          <th>40 cm</th>
+          <th>70 cm</th>
+          <th>100 cm</th>
+          <th>130 cm</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label">素</td>
+          <td><audio controls src="audio/pos2_su_10cm.wav"></audio></td>
+          <td><audio controls src="audio/pos2_su_40cm.wav"></audio></td>
+          <td><audio controls src="audio/pos2_su_70cm.wav"></audio></td>
+          <td><audio controls src="audio/pos2_su_100cm.wav"></audio></td>
+          <td><audio controls src="audio/pos2_su_130cm.wav"></audio></td>
+        </tr>
+        <tr>
+          <td class="row-label">２</td>
+          <td><audio controls src="audio/pos2_2_10cm.wav"></audio></td>
+          <td><audio controls src="audio/pos2_2_40cm.wav"></audio></td>
+          <td><audio controls src="audio/pos2_2_70cm.wav"></audio></td>
+          <td><audio controls src="audio/pos2_2_100cm.wav"></audio></td>
+          <td><audio controls src="audio/pos2_2_130cm.wav"></audio></td>
+        </tr>
+        <tr>
+          <td class="row-label">１</td>
+          <td><audio controls src="audio/pos2_1_10cm.wav"></audio></td>
+          <td><audio controls src="audio/pos2_1_40cm.wav"></audio></td>
+          <td><audio controls src="audio/pos2_1_70cm.wav"></audio></td>
+          <td><audio controls src="audio/pos2_1_100cm.wav"></audio></td>
+          <td><audio controls src="audio/pos2_1_130cm.wav"></audio></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tab3〜Tab10 も同様に増殖させる（idと pos番号だけ変更） -->
+
+  <!-- タブ切り替え用の簡単なJS -->
+  <script>
+    const tabButtons = document.querySelectorAll(".tab-button");
+    const tabContents = document.querySelectorAll(".tab-content");
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const target = btn.getAttribute("data-tab");
+
+        // ボタンの見た目切り替え
+        tabButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        // コンテンツの表示切り替え
+        tabContents.forEach(c => {
+          if (c.id === "tab-" + target) {
+            c.classList.add("active");
+          } else {
+            c.classList.remove("active");
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
