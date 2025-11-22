@@ -263,7 +263,7 @@
     }
 
     function setupLock() {
-      const overlay      = document.getElementById("lock-overlay");
+      const overlay       = document.getElementById("lock-overlay");
       const passwordInput = document.getElementById("lock-password");
       const agreeCheckbox = document.getElementById("agree-terms");
       const enterButton   = document.getElementById("enter-button");
@@ -309,6 +309,7 @@
 
     // Pattern A〜C
     const PATTERNS = ["A", "B", "C"];
+
     // CH4〜8 に対応する距離表示
     const CHANNELS = [4, 5, 6, 7, 8];
     const DISTANCE_LABELS = {
@@ -318,6 +319,10 @@
       7: "100 cm",
       8: "130 cm"
     };
+
+    // ★衝撃源ごとのサブフォルダ名＆ファイル名用キー
+    //   "ball" / "tapping" / "tire" など、実際のフォルダ名・ファイル名に合わせて変更
+    const SOURCE_KEY = "ball";  // ←ここを "tapping" / "tire" に変えれば別ページとして使える
 
     /**
      * 位置番号（1〜10）から、ファイル用の 2桁文字列 "01"〜"10" を返す
@@ -379,8 +384,8 @@
           audio.controls = true;
 
           // ファイル名ルール：
-          // audio/BRI_Hakogata/Pattern_[A/B/C]_bang_[01〜10]_CH[4〜8].wav
-          const src = `audio/BRI_Hakogata/Pattern_${pattern}_bang_${posCode}_CH${ch}.wav`;
+          // audio/BRI_Hakogata/[ball|tapping|tire]/Pattern_[A/B/C]_[ball|tapping|tire]_[01〜10]_CH[4〜8].wav
+          const src = `audio/BRI_Hakogata/${SOURCE_KEY}/Pattern_${pattern}_${SOURCE_KEY}_${posCode}_CH${ch}.wav`;
           audio.src = src;
 
           td.appendChild(audio);
