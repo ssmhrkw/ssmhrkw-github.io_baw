@@ -124,9 +124,154 @@
       color: #555;
       margin-top: 0.5rem;
     }
+
+    /* ===== なんちゃってロック用スタイル ===== */
+    #lock-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    #lock-panel {
+      background: #ffffff;
+      max-width: 600px;
+      width: 90%;
+      padding: 1.5rem 1.8rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    #lock-panel h2 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      font-size: 1.4rem;
+    }
+
+    #lock-panel p {
+      margin-top: 0.25rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .terms-box {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 0.5rem 0.75rem;
+      max-height: 180px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      background: #fafafa;
+      margin-bottom: 0.75rem;
+      white-space: pre-wrap;
+    }
+
+    .lock-field {
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .lock-field label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+    }
+
+    .lock-field input[type="password"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .lock-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .lock-footer-left {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+    }
+
+    #enter-button {
+      padding: 0.4rem 1.2rem;
+      font-size: 0.95rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #4285f4;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    #enter-button:disabled {
+      background: #c0c0c0;
+      cursor: default;
+    }
+
+    #lock-error {
+      margin-top: 0.4rem;
+      font-size: 0.85rem;
+      color: #c0392b;
+      min-height: 1.1em;
+    }
+    /* ===== なんちゃってロック用スタイルここまで ===== */
+
   </style>
 </head>
 <body>
+  <!-- ===== なんちゃってロック用オーバーレイ ===== -->
+  <div id="lock-overlay">
+    <div id="lock-panel">
+      <h2>床衝撃音サンプル利用に関する利用条件の確認</h2>
+      <p>
+        このページでは、研究目的で取得した床衝撃音の実測データを再生できます。<br>
+        ご利用にあたり、下記の条件をご確認のうえ、パスワードを入力してください。
+      </p>
+
+      <div class="terms-box">
+        ・研究仲間にリンクを配るときの、最低限のマナー＆心理的ハードルとして設定しています。
+        ・本音源は、配布者の検討や実験の過程を示すことを主な目的として提供しています。
+        ・生データや本リンクの再配布、不特定多数への再公開を行わないでください。
+        ・聞いてみる、自分で検討に使ってみる、これら以外の利用については配布者に相談してください。
+        ・個別案件・商品等の宣伝目的での利用はご遠慮ください。
+        ・本データの利用により生じた結果・損害等について、提供者は一切の責任を負いません。
+      </div>
+
+      <div class="lock-field">
+        <label for="lock-password">パスワード</label>
+        <input
+          id="lock-password"
+          type="password"
+          autocomplete="off"
+          placeholder="パスワードを入力してください"
+        />
+      </div>
+
+      <div class="lock-footer">
+        <div class="lock-footer-left">
+          <input type="checkbox" id="agree-terms" />
+          <label for="agree-terms">上記の利用条件に同意します</label>
+        </div>
+        <button id="enter-button" disabled>入室する</button>
+      </div>
+
+      <div id="lock-error"></div>
+    </div>
+  </div>
+  <!-- ===== ロック用オーバーレイ ここまで ===== -->
+
   <h1>床衝撃音サンプル再生 B 残響室床開口部</h1>
   <p>測定点配置図：</p>
 
@@ -167,12 +312,63 @@
 
   <!-- 再生テーブル -->
   <div id="audio-table-container"></div>
-  <div class="legend">
-
-  </div>
+  <div class="legend"></div>
 
   <script>
-    // ===== 設定パラメータ =====
+    // ===== なんちゃってロック機能 =====
+    const PASSWORD = "hirakawa";
+
+    function hideLockOverlay() {
+      const overlay = document.getElementById("lock-overlay");
+      if (overlay) {
+        overlay.style.display = "none";
+      }
+    }
+
+    function setupLock() {
+      const overlay = document.getElementById("lock-overlay");
+      if (!overlay) return;
+
+      const passwordInput = document.getElementById("lock-password");
+      const agreeCheckbox = document.getElementById("agree-terms");
+      const enterButton   = document.getElementById("enter-button");
+      const errorEl       = document.getElementById("lock-error");
+
+      function updateButtonState() {
+        enterButton.disabled = !agreeCheckbox.checked;
+      }
+
+      agreeCheckbox.addEventListener("change", updateButtonState);
+
+      enterButton.addEventListener("click", () => {
+        const inputVal = passwordInput.value || "";
+        errorEl.textContent = "";
+
+        if (!agreeCheckbox.checked) {
+          errorEl.textContent = "利用条件への同意が必要です。";
+          return;
+        }
+
+        if (inputVal !== PASSWORD) {
+          errorEl.textContent = "パスワードが違います。";
+          passwordInput.focus();
+          passwordInput.select();
+          return;
+        }
+
+        // ここでは localStorage に保存せず、単にこのセッション分だけオーバーレイを消す
+        hideLockOverlay();
+      });
+
+      // Enterキーでも送信できるように
+      passwordInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          enterButton.click();
+        }
+      });
+    }
+
+    // ===== ここから元のプレーヤー用スクリプト =====
 
     // パターン A〜J
     const PATTERNS = ["A","B","C","D","E","F","G","H","I","J"];
@@ -360,6 +556,7 @@
 
     // ===== 初期化 =====
     document.addEventListener("DOMContentLoaded", () => {
+      setupLock();         // なんちゃってロック初期化（毎回入力方式）
       createMatrix();
       setupSourceSelector();
       renderPositionTable(); // A1 から開始
