@@ -231,7 +231,6 @@
   </style>
 </head>
 <body>
-  <!-- ===== なんちゃってロック用オーバーレイ ===== -->
   <div id="lock-overlay">
     <div id="lock-panel">
       <h2>床衝撃音サンプル利用に関する利用条件の確認</h2>
@@ -270,8 +269,6 @@
       <div id="lock-error"></div>
     </div>
   </div>
-  <!-- ===== ロック用オーバーレイ ここまで ===== -->
-
   <h1>床衝撃音サンプル再生 B 残響室床開口部</h1>
   <p>測定点配置図：</p>
 
@@ -281,7 +278,6 @@
     alt="測定点配置図"
   />
 
-  <!-- 音源種類の切り替え -->
   <div id="source-selector">
     <span>音源種類:</span>
     <label>
@@ -304,13 +300,10 @@
     ※B2,B4,D3,F2,F4の測定位置はPatternAからJまで全ての音源ファイルが存在します。その他の測定位置にはパターンC,D,E,G,Iの測定結果がありません。
   </p>
 
-  <!-- 位置選択マトリクス -->
   <div id="matrix"></div>
 
-  <!-- 選択された位置のタイトル -->
   <h2 id="position-title">測定位置 -</h2>
 
-  <!-- 再生テーブル -->
   <div id="audio-table-container"></div>
   <div class="legend"></div>
 
@@ -405,6 +398,7 @@
 
     function makeFilePath(sourceType, pattern, pos, ch) {
       const cfg = SOURCE_CONFIG[sourceType];
+      // 修正: シンプルなファイル名（Pattern_A_tap_A1_CH4.wav）に対応
       return `audio/BRI_RevChamber/${cfg.folder}/Pattern_${pattern}_${cfg.token}_${pos}_CH${ch}.wav`;
     }
 
