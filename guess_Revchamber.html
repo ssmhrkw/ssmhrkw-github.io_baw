@@ -292,6 +292,10 @@
       <input type="radio" name="sourceType" value="ball" />
       Ball
     </label>
+    <label>
+      <input type="radio" name="sourceType" value="hammer" />
+      Hammer
+    </label>
   </div>
 
   <p style="font-size: 0.85rem; color: #555; margin-top: 0;">
@@ -387,10 +391,12 @@
     ];
 
     // 音源種類ごとのフォルダ名 & ファイル名トークン
+    // ★Hammerを追加しました
     const SOURCE_CONFIG = {
       tapping: { folder: "tapping", token: "tap"  },
       tire:    { folder: "tire",    token: "bang" },
-      ball:    { folder: "ball",    token: "ball" }
+      ball:    { folder: "ball",    token: "ball" },
+      hammer:  { folder: "hammer",  token: "hammer" } 
     };
 
     let currentSourceType = "tapping";
@@ -398,8 +404,9 @@
 
     function makeFilePath(sourceType, pattern, pos, ch) {
       const cfg = SOURCE_CONFIG[sourceType];
-      // 修正: シンプルなファイル名（Pattern_A_tap_A1_CH4.wav）に対応
-      return `audio/BRI_RevChamber/${cfg.folder}/Pattern_${pattern}_${cfg.token}_${pos}_CH${ch}.wav`;
+      // ★修正: DSをファイル名に追加
+      // 例: audio/BRI_RevChamber/tire/Pattern_A_bang_A1_DS_CH4.wav
+      return `audio/BRI_RevChamber/${cfg.folder}/Pattern_${pattern}_${cfg.token}_${pos}_DS_CH${ch}.wav`;
     }
 
     // ===== マトリクス作成 =====
@@ -522,7 +529,7 @@
           audio.addEventListener("error", () => {
             td.classList.add("missing-cell");
             td.textContent = "－";
-            console.warn("Missing or unreadable audio file:", src);
+            // console.warn("Missing or unreadable audio file:", src);
           });
 
           td.appendChild(audio);
@@ -550,7 +557,7 @@
 
     // ===== 初期化 =====
     document.addEventListener("DOMContentLoaded", () => {
-      setupLock();         // なんちゃってロック初期化（毎回入力方式）
+      setupLock();          // なんちゃってロック初期化（毎回入力方式）
       createMatrix();
       setupSourceSelector();
       renderPositionTable(); // A1 から開始
