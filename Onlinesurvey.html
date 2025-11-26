@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>集合住宅の音環境情報提供方法に関するオンライン調査</title>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+        }
+        .question-box {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            background-color: #fff;
+        }
+        .q-header {
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: baseline;
+        }
+        .q-id {
+            color: #0056b3;
+            margin-right: 10px;
+            font-size: 1.1em;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 0.75em;
+            color: #fff;
+            border-radius: 4px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .badge-sa { background-color: #28a745; } /* Single Answer */
+        .badge-ma { background-color: #17a2b8; } /* Multiple Answer */
+        .badge-rank { background-color: #fd7e14; } /* Ranking */
+        
+        .options label {
+            display: block;
+            margin-bottom: 10px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .options label:hover {
+            background-color: #f8f9fa;
+        }
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        input[type="text"] {
+            margin-left: 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 200px;
+        }
+        .experiment-area {
+            background-color: #e9ecef;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-radius: 6px;
+        }
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .mock-card {
+            width: 120px;
+            height: 160px;
+            background-color: #fff;
+            border: 2px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #6c757d;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            min-width: 200px;
+        }
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #0056b3;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 40px;
+        }
+        .submit-btn:hover {
+            background-color: #004494;
+        }
+        .logic-note {
+            font-size: 0.85em;
+            color: #dc3545;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>集合住宅の音環境情報提供方法に関するオンライン調査</h1>
+
+    <h2>基本属性・スクリーニング</h2>
+
+    <div class="question-box" id="S1">
+        <div class="q-header">
+            <span class="q-id">S1</span>
+            現在のお住まいの地域をお知らせください。
+            <span class="badge badge-sa">ひとつだけ</span>
+        </div>
+        <div class="options">
+            <label><input type="radio" name="S1" value="1"> 北海道</label>
+            <label><input type="radio" name="S1" value="2"> 東北地方</label>
+            <label><input type="radio" name="S1" value="3"> 関東地方</label>
+            <label><input type="radio" name="S1" value="4"> 中部地方</label>
+            <label><input type="radio" name="S1" value="5"> 近畿地方</label>
+            <label><input type="radio" name="S1" value="6"> 中国・四国地方</label>
+            <label><input type="radio" name="S1" value="7"> 九州・沖縄地方</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="S2">
+        <div class="q-header">
+            <span class="q-id">S2</span>
+            現在のご年齢をお知らせください。
+            <span class="badge badge-sa">ひとつだけ</span>
+        </div>
+        <div class="options">
+            <label><input type="radio" name="S2" value="1"> 19歳以下</label>
+            <label><input type="radio" name="S2" value="2"> 20代</label>
+            <label><input type="radio" name="S2" value="3"> 30代</label>
+            <label><input type="radio" name="S2" value="4"> 40代</label>
+            <label><input type="radio" name="S2" value="5"> 50代</label>
+            <label><input type="radio" name="S2" value="6"> 60代</label>
+            <label><input type="radio" name="S2" value="7"> 70歳以上（終了対象）</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="S3">
+        <div class="q-header">
+            <span class="q-id">S3</span>
+            現在のお住まいの形態をお選びください。
+            <span class="badge badge-sa">ひとつだけ</span>
+        </div>
+        <div class="options">
+            <label><input type="radio" name="S3" value="1"> 集合住宅</label>
+            <label><input type="radio" name="S3" value="3"> 戸建て <span class="logic-note">※S4へ移動</span></label>
+        </div>
+    </div>
+
+    <div class="question-box" id="S4">
+        <div class="q-header">
+            <span class="q-id">S4</span>
+            今後の住み替え意向
+            <span class="badge badge-sa">ひとつだけ</span>
+        </div>
+        <div class="options">
+            <label><input type="radio" name="S4" value="1"> 集合住宅に引っ越しを考えている</label>
+            <label><input type="radio" name="S4" value="2"> そもそも住み替える予定は特にない（終了対象）</label>
+        </div>
+    </div>
+
+    <h2>本調査</h2>
+
+    <div class="question-box" id="Q1">
+        <div class="q-header">
+            <span class="q-id">Q1</span>
+            現在のお住まいには、どのくらいの期間住んでいますか？
+            <span class="badge badge-sa">ひとつだけ</span>
+        </div>
+        <div class="options">
+            <label><input type="radio" name="Q1" value="1"> 1年未満</label>
+            <label><input type="radio" name="Q1" value="2"> 1年以上〜3年未満</label>
+            <label><input type="radio" name="Q1" value="3"> 3年以上〜5年未満</label>
+            <label><input type="radio" name="Q1" value="4"> 5年以上〜10年未満</label>
+            <label><input type="radio" name="Q1" value="5"> 10年以上</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q2">
+        <div class="q-header">
+            <span class="q-id">Q2</span>
+            今のお住まいで、「音（騒音や生活音）」について気になることはありますか？
+            <span class="badge badge-sa">ひとつだけ</span>
+        </div>
+        <div class="options">
+            <label><input type="radio" name="Q2" value="1"> とても気になっている</label>
+            <label><input type="radio" name="Q2" value="2"> やや気になっている</label>
+            <label><input type="radio" name="Q2" value="3"> どちらともいえない</label>
+            <label><input type="radio" name="Q2" value="4"> あまり気になっていない</label>
+            <label><input type="radio" name="Q2" value="5"> 全く気になっていない</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q3">
+        <div class="q-header">
+            <span class="q-id">Q3</span>
+            住まいの「音（騒音や生活音）」の感じ方に関係あると思うものについて、すべて選択してください。
+            <span class="badge badge-ma">複数選択可</span>
+        </div>
+        <div class="options">
+            <label><input type="checkbox" name="Q3" value="1"> 自分の生活リズムや感覚（神経質かどうか、音の好みなど）</label>
+            <label><input type="checkbox" name="Q3" value="2"> 近隣住戸の人たちの生活リズムや感覚（夜型かどうか、音への配慮など）</label>
+            <label><input type="checkbox" name="Q3" value="3"> 周辺の環境（道路・線路・お店の有無など）</label>
+            <label><input type="checkbox" name="Q3" value="4"> 建物の構造や防音性能（壁・床・窓の性能など）</label>
+            <label><input type="checkbox" name="Q3" value="5"> 興味がない／特に関係あるとは思わない</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q4">
+        <div class="q-header">
+            <span class="q-id">Q4</span>
+            今後、住まいを選ぶとしたら、「音環境の良さ」をどの程度重視しますか？
+            <span class="badge badge-sa">ひとつだけ</span>
+        </div>
+        <div class="options">
+            <label><input type="radio" name="Q4" value="1"> 非常に重視する</label>
+            <label><input type="radio" name="Q4" value="2"> ある程度重視する</label>
+            <label><input type="radio" name="Q4" value="3"> どちらともいえない</label>
+            <label><input type="radio" name="Q4" value="4"> あまり重視しない</label>
+            <label><input type="radio" name="Q4" value="5"> 全く重視しない</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q5">
+        <div class="q-header">
+            <span class="q-id">Q5</span>
+            住まいを選ぶときに、「音に関する情報」は物件情報として詳しく載っていてほしいですか？
+            <span class="badge badge-sa">ひとつだけ</span>
+        </div>
+        <div class="options">
+            <label><input type="radio" name="Q5" value="1"> ぜひ詳しく知りたい</label>
+            <label><input type="radio" name="Q5" value="2"> あった方がよい</label>
+            <label><input type="radio" name="Q5" value="3"> どちらともいえない</label>
+            <label><input type="radio" name="Q5" value="4"> 特に知りたいとは思わない</label>
+            <label><input type="radio" name="Q5" value="5"> むしろ知りたくない</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q6">
+        <div class="q-header">
+            <span class="q-id">Q6</span>
+            これまでに、住宅の「音」に関する情報を見たり聞いたりしたことがある場所を教えてください。（すべて選択）
+            <span class="badge badge-ma">複数選択可</span>
+        </div>
+        <div class="options">
+            <label><input type="checkbox" name="Q6" value="1"> 不動産会社の店頭・担当者からの説明</label>
+            <label><input type="checkbox" name="Q6" value="2"> 物件のパンフレット・チラシ</label>
+            <label><input type="checkbox" name="Q6" value="3"> 不動産ポータルサイト（SUUMOなど）の物件ページ</label>
+            <label><input type="checkbox" name="Q6" value="4"> 物件の公式ホームページ</label>
+            <label><input type="checkbox" name="Q6" value="5"> モデルルームや見学会での説明・展示</label>
+            <label><input type="checkbox" name="Q6" value="6"> 契約時の重要事項説明書などの書面</label>
+            <label><input type="checkbox" name="Q6" value="7"> 口コミサイト・SNS・ブログなど</label>
+            <label><input type="checkbox" name="Q6" value="8"> 建築会社・メーカーの技術資料やカタログ</label>
+            <label><input type="checkbox" name="Q6" value="9"> 家族や友人・知人など、実際に住んでいる人から聞いた話</label>
+            <label><input type="checkbox" name="Q6" value="10"> その他 <input type="text" placeholder="自由記述"></label>
+            <label><input type="checkbox" name="Q6" value="11"> 特に見たり聞いたりしたことはない</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q7">
+        <div class="q-header">
+            <span class="q-id">Q7</span>
+            Q6で「見たことがある」と答えたもののうち、「特に音の情報が分かりやすかった」と感じたものを教えてください。（すべて選択）
+            <span class="badge badge-ma">複数選択可</span>
+        </div>
+        <div class="logic-note">※システム制御：Q6で選択された項目のみ表示します</div>
+        <div class="options">
+            <label><input type="checkbox" name="Q7" value="1"> 不動産会社の店頭・担当者からの説明</label>
+            <label><input type="checkbox" name="Q7" value="2"> 物件のパンフレット・チラシ</label>
+            <label><input type="checkbox" name="Q7" value="3"> 不動産ポータルサイト（SUUMOなど）の物件ページ</label>
+            <label><input type="checkbox" name="Q7" value="4"> 物件の公式ホームページ</label>
+            <label><input type="checkbox" name="Q7" value="5"> モデルルームや見学会での説明・展示</label>
+            <label><input type="checkbox" name="Q7" value="6"> 契約時の重要事項説明書などの書面</label>
+            <label><input type="checkbox" name="Q7" value="7"> 口コミサイト・SNS・ブログなど</label>
+            <label><input type="checkbox" name="Q7" value="8"> 建築会社・メーカーの技術資料やカタログ</label>
+            <label><input type="checkbox" name="Q7" value="9"> 家族や友人・知人など、実際に住んでいる人から聞いた話</label>
+            <label><input type="checkbox" name="Q7" value="10"> 特に分かりやすいと感じたものはない</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q8">
+        <div class="q-header">
+            <span class="q-id">Q8</span>
+            住まいを選ぶときに、「音に関する情報」はどのタイミングで知りたいですか？
+            <span class="badge badge-ma">複数選択可</span>
+        </div>
+        <div class="options">
+            <label><input type="checkbox" name="Q8" value="1"> ネット検索している段階</label>
+            <label><input type="checkbox" name="Q8" value="2"> 資料請求した段階</label>
+            <label><input type="checkbox" name="Q8" value="3"> 内覧（見学）している段階</label>
+            <label><input type="checkbox" name="Q8" value="4"> 契約前の重要事項説明</label>
+            <label><input type="checkbox" name="Q8" value="5"> 入居してからでいい</label>
+            <label><input type="checkbox" name="Q8" value="6"> 特にこだわりはない</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q9">
+        <div class="q-header">
+            <span class="q-id">Q9</span>
+            住まいを選ぶときの「音に関する情報」は、誰から提供してほしいですか？
+            <span class="badge badge-ma">複数選択可</span>
+        </div>
+        <div class="options">
+            <label><input type="checkbox" name="Q9" value="1"> 物件を紹介してくれる不動産会社・仲介会社</label>
+            <label><input type="checkbox" name="Q9" value="2"> 物件をつくった会社（デベロッパー・ハウスメーカーなど）</label>
+            <label><input type="checkbox" name="Q9" value="3"> 入居後の窓口になる管理会社・大家さん</label>
+            <label><input type="checkbox" name="Q9" value="4"> 第三者機関（検査会社など）</label>
+            <label><input type="checkbox" name="Q9" value="5"> 口コミサイト（住人の声）</label>
+            <label><input type="checkbox" name="Q9" value="6"> こだわりはない</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q10">
+        <div class="q-header">
+            <span class="q-id">Q10</span>
+            新しく住む集合住宅について、「音」に関してどのようなことを知りたいですか。（すべて選択）
+            <span class="badge badge-ma">複数選択可</span>
+        </div>
+        <div class="options">
+            <label><input type="checkbox" name="Q10" value="1"> 上の階・隣の部屋の足音や生活音がどの程度聞こえそうか</label>
+            <label><input type="checkbox" name="Q10" value="2"> 隣の部屋の話し声やテレビの音がどの程度聞こえそうか</label>
+            <label><input type="checkbox" name="Q10" value="3"> 外からの騒音（車・電車・道路など）がどの程度聞こえそうか</label>
+            <label><input type="checkbox" name="Q10" value="4"> 水まわり（トイレ・お風呂・排水）の音がどのくらい聞こえそうか</label>
+            <label><input type="checkbox" name="Q10" value="5"> エレベーター・共用廊下・エントランスなど共用部分の音</label>
+            <label><input type="checkbox" name="Q10" value="6"> 子どもが走ったり跳ねたりしたときの音が、上下階や隣の部屋にどのくらい伝わりそうか</label>
+            <label><input type="checkbox" name="Q10" value="7"> 楽器演奏やホームシアターの利用がどこまで許されるか</label>
+            <label><input type="checkbox" name="Q10" value="8"> 夜間や早朝の静かさ（寝るときの静かさ）</label>
+            <label><input type="checkbox" name="Q10" value="9"> その他 <input type="text" placeholder="自由記述"></label>
+            <label><input type="checkbox" name="Q10" value="10"> 特に知りたいことはない</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q10b">
+        <div class="q-header">
+            <span class="q-id">Q10b</span>
+            どのような「情報の出し方」があるとわかりやすいと思いますか。（すべて選択）
+            <span class="badge badge-ma">複数選択可</span>
+        </div>
+        <div class="options">
+            <label><input type="checkbox" name="Q10b" value="1"> 「遮音等級」「D値」などの専門的な数値・等級</label>
+            <label><input type="checkbox" name="Q10b" value="2"> 「静かさレベル（★1〜5など）」のようなランク表示</label>
+            <label><input type="checkbox" name="Q10b" value="3"> 「このくらいの足音は聞こえる／聞こえない」など、生活場面の具体例</label>
+            <label><input type="checkbox" name="Q10b" value="4"> 実際の音を再生して聞けるサンプル（動画・音声など）</label>
+            <label><input type="checkbox" name="Q10b" value="5"> 同じ建物の中での「静かな部屋」と「そうでない部屋」の違いの説明</label>
+            <label><input type="checkbox" name="Q10b" value="6"> 他の物件との比較（A物件よりB物件の方が静かなど）</label>
+            <label><input type="checkbox" name="Q10b" value="7"> 注意点の一言解説</label>
+            <label><input type="checkbox" name="Q10b" value="8"> 共振の影響をはじめとする専門的な解説</label>
+            <label><input type="checkbox" name="Q10b" value="9"> その他 <input type="text" placeholder="自由記述"></label>
+            <label><input type="checkbox" name="Q10b" value="10"> 特にこだわりはない</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q11">
+        <div class="q-header">
+            <span class="q-id">Q11</span>
+            住まいを選ぶときの「音に関する情報」について「分かりにくい」と感じる点があれば教えてください。（すべて選択）
+            <span class="badge badge-ma">複数選択可</span>
+        </div>
+        <div class="options">
+            <label><input type="checkbox" name="Q11" value="1"> 専門用語の意味が分からない</label>
+            <label><input type="checkbox" name="Q11" value="2"> 数値の基準（良し悪し）が分からない</label>
+            <label><input type="checkbox" name="Q11" value="3"> 実際の生活イメージが湧かない</label>
+            <label><input type="checkbox" name="Q11" value="4"> 他の物件と比較できない</label>
+            <label><input type="checkbox" name="Q11" value="5"> 説明が少なすぎる</label>
+            <label><input type="checkbox" name="Q11" value="6"> 文字が多すぎて読む気にならない</label>
+            <label><input type="checkbox" name="Q11" value="7"> そもそも記載されていない</label>
+            <label><input type="checkbox" name="Q11" value="8"> 専門家や第三者の「一言コメント」などがなく、判断に自信が持てない</label>
+            <label><input type="checkbox" name="Q11" value="9"> その他 <input type="text" placeholder="自由記述"></label>
+            <label><input type="checkbox" name="Q11" value="10"> 特にない</label>
+        </div>
+    </div>
+
+    <h2>情報表示の比較実験</h2>
+    <div class="experiment-area">
+        <p>以下のQ12〜Q14では、下記の5つの表示例（カードA〜E）を比較していただきます。</p>
+        <div class="card-container">
+            <div class="mock-card">【表示例A】<br>等級表示</div>
+            <div class="mock-card">【表示例B】<br>相当スラブ厚</div>
+            <div class="mock-card">【表示例C】<br>仕様スペック</div>
+            <div class="mock-card">【表示例D】<br>性能数値</div>
+            <div class="mock-card">【表示例E】<br>生活実感</div>
+        </div>
+        <small>※実際の画面では、ここに具体的な画像が表示されます。（順序はランダム）</small>
+    </div>
+
+    <div class="question-box" id="Q12">
+        <div class="q-header">
+            <span class="q-id">Q12</span>
+            A〜Eの表示例について、「パッと見て、内容が分かりやすい」と感じるものをお選びください。
+            <span class="badge badge-rank">順位選択</span>
+        </div>
+        <div class="options">
+            <label>もっとも分かりやすい（1位）:
+                <select name="Q12_1">
+                    <option value="">選択してください</option>
+                    <option value="A">【表示例A】等級表示</option>
+                    <option value="B">【表示例B】相当スラブ厚</option>
+                    <option value="C">【表示例C】仕様スペック</option>
+                    <option value="D">【表示例D】性能数値</option>
+                    <option value="E">【表示例E】生活実感</option>
+                </select>
+            </label>
+            <label>次に分かりやすい（2位）:
+                <select name="Q12_2">
+                    <option value="">選択してください</option>
+                    <option value="A">【表示例A】等級表示</option>
+                    <option value="B">【表示例B】相当スラブ厚</option>
+                    <option value="C">【表示例C】仕様スペック</option>
+                    <option value="D">【表示例D】性能数値</option>
+                    <option value="E">【表示例E】生活実感</option>
+                </select>
+            </label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q13">
+        <div class="q-header">
+            <span class="q-id">Q13</span>
+            A〜Eの表示例について、「客観的で、ごまかしが少なそうだ」と感じるものをお選びください。
+            <span class="badge badge-rank">順位選択</span>
+        </div>
+        <div class="options">
+            <label>もっとも信頼できそう（1位）:
+                <select name="Q13_1">
+                    <option value="">選択してください</option>
+                    <option value="A">【表示例A】等級表示</option>
+                    <option value="B">【表示例B】相当スラブ厚</option>
+                    <option value="C">【表示例C】仕様スペック</option>
+                    <option value="D">【表示例D】性能数値</option>
+                    <option value="E">【表示例E】生活実感</option>
+                </select>
+            </label>
+            <label>次に信頼できそう（2位）:
+                <select name="Q13_2">
+                    <option value="">選択してください</option>
+                    <option value="A">【表示例A】等級表示</option>
+                    <option value="B">【表示例B】相当スラブ厚</option>
+                    <option value="C">【表示例C】仕様スペック</option>
+                    <option value="D">【表示例D】性能数値</option>
+                    <option value="E">【表示例E】生活実感</option>
+                </select>
+            </label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q14">
+        <div class="q-header">
+            <span class="q-id">Q14</span>
+            A〜Eの表示例について、実際にあなたが物件を選ぶとしたときに「一番参考にしたい」と感じるものをお選びください。
+            <span class="badge badge-rank">順位選択</span>
+        </div>
+        <div class="options">
+            <label>もっとも参考にしたい（1位）:
+                <select name="Q14_1">
+                    <option value="">選択してください</option>
+                    <option value="A">【表示例A】等級表示</option>
+                    <option value="B">【表示例B】相当スラブ厚</option>
+                    <option value="C">【表示例C】仕様スペック</option>
+                    <option value="D">【表示例D】性能数値</option>
+                    <option value="E">【表示例E】生活実感</option>
+                </select>
+            </label>
+            <label>次に参考にしたい（2位）:
+                <select name="Q14_2">
+                    <option value="">選択してください</option>
+                    <option value="A">【表示例A】等級表示</option>
+                    <option value="B">【表示例B】相当スラブ厚</option>
+                    <option value="C">【表示例C】仕様スペック</option>
+                    <option value="D">【表示例D】性能数値</option>
+                    <option value="E">【表示例E】生活実感</option>
+                </select>
+            </label>
+        </div>
+    </div>
+
+    <h2>まとめ</h2>
+
+    <div class="question-box" id="Q15">
+        <div class="q-header">
+            <span class="q-id">Q15</span>
+            今回のアンケートを通して、A〜Eの表示例を含め、「理想的だ」と思った情報形式をすべて選んでください。
+            <span class="badge badge-ma">複数選択可</span>
+        </div>
+        <div class="options">
+            <label><input type="checkbox" name="Q15" value="1"> 【表示例A】等級表示</label>
+            <label><input type="checkbox" name="Q15" value="2"> 【表示例B】相当スラブ厚</label>
+            <label><input type="checkbox" name="Q15" value="3"> 【表示例C】仕様スペック</label>
+            <label><input type="checkbox" name="Q15" value="4"> 【表示例D】性能数値</label>
+            <label><input type="checkbox" name="Q15" value="5"> 【表示例E】生活実感</label>
+            <label><input type="checkbox" name="Q15" value="6"> 実際の音サンプル</label>
+            <label><input type="checkbox" name="Q15" value="7"> 過去の入居者の満足度</label>
+            <label><input type="checkbox" name="Q15" value="8"> その他 <input type="text" placeholder="自由記述"></label>
+            <label><input type="checkbox" name="Q15" value="9"> 特にこだわりはない</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q16">
+        <div class="q-header">
+            <span class="q-id">Q16</span>
+            もし、分かりやすい情報が十分に提供されていたら、あなたの物件選びは変わりそうですか？
+            <span class="badge badge-sa">ひとつだけ</span>
+        </div>
+        <div class="options">
+            <label><input type="radio" name="Q16" value="1"> 非常に大きく影響する</label>
+            <label><input type="radio" name="Q16" value="2"> ある程度影響する</label>
+            <label><input type="radio" name="Q16" value="3"> あまり影響しない</label>
+            <label><input type="radio" name="Q16" value="4"> 全く影響しない</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q17">
+        <div class="q-header">
+            <span class="q-id">Q17</span>
+            現在のご職業をお選びください。
+            <span class="badge badge-sa">ひとつだけ</span>
+        </div>
+        <div class="options">
+            <label><input type="radio" name="Q17" value="1"> 会社員（正社員）</label>
+            <label><input type="radio" name="Q17" value="2"> 会社員（契約・派遣）</label>
+            <label><input type="radio" name="Q17" value="3"> 公務員</label>
+            <label><input type="radio" name="Q17" value="4"> 自営業・自由業</label>
+            <label><input type="radio" name="Q17" value="5"> パート・アルバイト</label>
+            <label><input type="radio" name="Q17" value="6"> 専業主婦（主夫）</label>
+            <label><input type="radio" name="Q17" value="7"> 学生</label>
+            <label><input type="radio" name="Q17" value="8"> 無職</label>
+            <label><input type="radio" name="Q17" value="9"> その他</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q18">
+        <div class="q-header">
+            <span class="q-id">Q18</span>
+            同居しているご家族構成をお知らせください。
+            <span class="badge badge-ma">複数選択可</span>
+        </div>
+        <div class="options">
+            <label><input type="checkbox" name="Q18" value="1"> 一人暮らし</label>
+            <label><input type="checkbox" name="Q18" value="2"> 配偶者・パートナー</label>
+            <label><input type="checkbox" name="Q18" value="3"> 子ども（未就学児）</label>
+            <label><input type="checkbox" name="Q18" value="4"> 子ども（小学生）</label>
+            <label><input type="checkbox" name="Q18" value="5"> 子ども（中学生以上）</label>
+            <label><input type="checkbox" name="Q18" value="6"> 親</label>
+            <label><input type="checkbox" name="Q18" value="7"> その他</label>
+        </div>
+    </div>
+
+    <div class="question-box" id="Q19">
+        <div class="q-header">
+            <span class="q-id">Q19</span>
+            世帯年収はおよそどのくらいですか？
+            <span class="badge badge-sa">ひとつだけ</span>
+        </div>
+        <div class="options">
+            <label><input type="radio" name="Q19" value="1"> 200万円未満</label>
+            <label><input type="radio" name="Q19" value="2"> 400万円未満</label>
+            <label><input type="radio" name="Q19" value="3"> 600万円未満</label>
+            <label><input type="radio" name="Q19" value="4"> 800万円未満</label>
+            <label><input type="radio" name="Q19" value="5"> 1000万円未満</label>
+            <label><input type="radio" name="Q19" value="6"> 1500万円未満</label>
+            <label><input type="radio" name="Q19" value="7"> 1500万円以上</label>
+            <label><input type="radio" name="Q19" value="8"> 答えたくない</label>
+        </div>
+    </div>
+
+    <button type="button" class="submit-btn" onclick="alert('回答ありがとうございました（モックアップのためデータは送信されません）')">回答を送信する</button>
+
+</div>
+
+</body>
+</html>
