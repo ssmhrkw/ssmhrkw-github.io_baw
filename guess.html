@@ -256,7 +256,7 @@
       Ball (ゴムボール)
     </label>
     <label>
-      <input type="radio" name="soundSource" value="tire">
+      <input type="radio" name="soundSource" value="bang">
       Bang (タイヤ)
     </label>
   </div>
@@ -419,7 +419,7 @@
 
           // ★変更: currentSourceKey 変数を使用してパスを生成
           // ファイル名ルール:
-          // audio/BRI_Hakogata/[ball|tire]/Pattern_[A/B/C]_[ball|tire]_[01〜10]_CH[4〜8].wav
+          // audio/BRI_Hakogata/[ball|bang]/Pattern_[A/B/C]_[ball|bang]_[01〜10]_CH[4〜8].wav
           const src = `audio/BRI_Hakogata/${currentSourceKey}/Pattern_${pattern}_${currentSourceKey}_${posCode}_CH${ch}.wav`;
           audio.src = src;
 
@@ -510,4 +510,5 @@
     });
   </script>
 </body>
+
 </html>
