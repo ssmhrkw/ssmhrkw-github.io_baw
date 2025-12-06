@@ -20,6 +20,31 @@
       margin-bottom: 1.5rem;
     }
 
+    /* === 追加: 音源切り替えラジオボタン === */
+    .source-selector {
+      margin-bottom: 1rem;
+      padding: 10px;
+      background-color: #f0f4ff;
+      border: 1px solid #d0e0ff;
+      border-radius: 6px;
+      display: inline-flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .source-selector label {
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .source-selector input[type="radio"] {
+      transform: scale(1.2);
+    }
+    /* =================================== */
+
     /* タブ部分 */
     .tabs {
       display: flex;
@@ -184,7 +209,6 @@
 </head>
 <body>
 
-  <!-- ===== なんちゃってロック用オーバーレイ ===== -->
   <div id="lock-overlay">
     <div id="lock-panel">
       <h2>床衝撃音サンプル利用に関する利用条件の確認</h2>
@@ -223,9 +247,20 @@
       <div id="lock-error"></div>
     </div>
   </div>
-  <!-- ===== ロック用オーバーレイ ここまで ===== -->
-
   <h1>床衝撃音サンプル再生（BRI 箱型）</h1>
+  
+  <div class="source-selector">
+    <span>音源選択:</span>
+    <label>
+      <input type="radio" name="soundSource" value="ball" checked>
+      Ball (ゴムボール)
+    </label>
+    <label>
+      <input type="radio" name="soundSource" value="tire">
+      Bang (タイヤ)
+    </label>
+  </div>
+
   <p>測定点配置図：</p>
 
   <img
@@ -234,7 +269,6 @@
     alt="測定点配置図"
   />
 
-  <!-- タブボタン 1〜10 -->
   <div class="tabs" id="tabs">
     <button class="tab-button active" data-tab="1">1</button>
     <button class="tab-button" data-tab="2">2</button>
@@ -248,7 +282,6 @@
     <button class="tab-button" data-tab="10">10</button>
   </div>
 
-  <!-- タブごとのコンテンツ（中身は JS で自動生成） -->
   <div id="tab-contents-container"></div>
 
   <script>
@@ -263,11 +296,11 @@
     }
 
     function setupLock() {
-      const overlay       = document.getElementById("lock-overlay");
+      const overlay        = document.getElementById("lock-overlay");
       const passwordInput = document.getElementById("lock-password");
       const agreeCheckbox = document.getElementById("agree-terms");
       const enterButton   = document.getElementById("enter-button");
-      const errorEl       = document.getElementById("lock-error");
+      const errorEl        = document.getElementById("lock-error");
 
       if (!overlay || !passwordInput || !agreeCheckbox || !enterButton || !errorEl) return;
 
@@ -320,9 +353,8 @@
       8: "130 cm"
     };
 
-    // ★衝撃源ごとのサブフォルダ名＆ファイル名用キー
-    //   "ball" / "tapping" / "tire" など、実際のフォルダ名・ファイル名に合わせて変更
-    const SOURCE_KEY = "ball";  // ←ここを "tapping" / "tire" に変えれば別ページとして使える
+    // ★変更: const から let に変更し、初期値を ball に設定
+    let currentSourceKey = "ball";
 
     /**
      * 位置番号（1〜10）から、ファイル用の 2桁文字列 "01"〜"10" を返す
@@ -336,7 +368,7 @@
      * 例: posIndex = 1 → "測定位置 1" のテーブルを作る
      */
     function createTabContentElement(posIndex) {
-      const posLabel = String(posIndex);         // 表示用 1〜10
+      const posLabel = String(posIndex);           // 表示用 1〜10
       const posCode  = toTwoDigits(posIndex);    // ファイル名用 01〜10
 
       const wrapper = document.createElement("div");
@@ -382,10 +414,13 @@
           const td = document.createElement("td");
           const audio = document.createElement("audio");
           audio.controls = true;
+          // プリロードをnoneにしてサーバー負荷軽減（必要に応じて auto や metadata に変更）
+          audio.preload = "none";
 
-          // ファイル名ルール：
-          // audio/BRI_Hakogata/[ball|tapping|tire]/Pattern_[A/B/C]_[ball|tapping|tire]_[01〜10]_CH[4〜8].wav
-          const src = `audio/BRI_Hakogata/${SOURCE_KEY}/Pattern_${pattern}_${SOURCE_KEY}_${posCode}_CH${ch}.wav`;
+          // ★変更: currentSourceKey 変数を使用してパスを生成
+          // ファイル名ルール:
+          // audio/BRI_Hakogata/[ball|tire]/Pattern_[A/B/C]_[ball|tire]_[01〜10]_CH[4〜8].wav
+          const src = `audio/BRI_Hakogata/${currentSourceKey}/Pattern_${pattern}_${currentSourceKey}_${posCode}_CH${ch}.wav`;
           audio.src = src;
 
           td.appendChild(audio);
@@ -401,21 +436,51 @@
       return wrapper;
     }
 
-    function setupTabs() {
-      const tabButtons   = document.querySelectorAll(".tab-button");
+    // ★追加: タブの中身だけを再描画する関数
+    function refreshTabContents() {
       const contentsRoot = document.getElementById("tab-contents-container");
+      
+      // 現在アクティブなタブ番号を取得（再描画後にアクティブ状態を維持するため）
+      let activeTabId = "1";
+      const activeBtn = document.querySelector(".tab-button.active");
+      if (activeBtn) {
+        activeTabId = activeBtn.getAttribute("data-tab");
+      }
 
-      // 1〜10 のタブコンテンツを自動生成
+      // 中身をクリア
+      contentsRoot.innerHTML = "";
+
+      // 再生成
       for (let i = 1; i <= 10; i++) {
         const contentEl = createTabContentElement(i);
-        if (i === 1) {
-          contentEl.classList.add("active"); // 初期表示は 1
+        // もともとアクティブだったタブなら active クラスを付与
+        if (String(i) === activeTabId) {
+          contentEl.classList.add("active");
         }
         contentsRoot.appendChild(contentEl);
       }
+    }
 
-      const tabContents = document.querySelectorAll(".tab-content");
+    // ★追加: ラジオボタンのイベント設定
+    function setupRadioButtons() {
+      const radios = document.querySelectorAll('input[name="soundSource"]');
+      radios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          // 変数を更新してテーブルを再描画
+          currentSourceKey = e.target.value;
+          refreshTabContents();
+        });
+      });
+    }
 
+    function setupTabs() {
+      const tabButtons   = document.querySelectorAll(".tab-button");
+      
+      // 初回生成（1〜10）
+      refreshTabContents();
+
+      // タブ切り替えクリックイベント
+      // (中身の再生成はせず、displayの切り替えのみ行う)
       tabButtons.forEach(btn => {
         btn.addEventListener("click", () => {
           const target = btn.getAttribute("data-tab");
@@ -425,6 +490,7 @@
           btn.classList.add("active");
 
           // コンテンツ表示切り替え
+          const tabContents = document.querySelectorAll(".tab-content");
           tabContents.forEach(c => {
             if (c.id === "tab-" + target) {
               c.classList.add("active");
@@ -439,6 +505,7 @@
     // ===== 初期化 =====
     document.addEventListener("DOMContentLoaded", () => {
       setupLock();
+      setupRadioButtons(); // ★追加
       setupTabs();
     });
   </script>
