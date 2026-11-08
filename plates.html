@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HFR5WYG42Q"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HFR5WYG42Q');
+  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>矩形板の駆動点インピーダンス（リアルタイム）</title>
+  <style>
+    :root{ --bg:#ffffff; --fg:#0f172a; --muted:#475569; --panel:#f8fafc; --accent:#2563eb; --border:#e2e8f0; }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:var(--fg); background:var(--bg);}
+    header{padding:16px 20px;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+    header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:0.2px;}
+    .container{display:grid;grid-template-columns: 560px 1fr;gap:16px;padding:16px;}
+    .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow: 0 1px 2px rgba(0,0,0,0.03);}
+    #controls{max-height: calc(100vh - 140px); overflow:auto;}
+    .card h2{margin:0 0 12px 0;font-size:14px;}
+    .grid1{display:grid;gap:10px;grid-template-columns: 1fr;}
+    .row{display:flex;align-items:center;gap:12px;}
+    label{font-size:12px;color:var(--muted);min-width:160px;}
+    input[type="text"], input[type="number"], select{ width:100%;min-width:260px;padding:12px 14px;border:1px solid var(--border); border-radius:10px;font-size:14px;background:#fff;color:var(--fg);}
+    input[type="checkbox"]{transform: translateY(1px);} input[type="radio"]{transform: translateY(1px);}
+    .subtle{color:var(--muted);font-size:12px;}
+    .section{margin:12px 0 16px 0;border-top:1px dashed var(--border);padding-top:12px;}
+    .btn{appearance:none;border:1px solid var(--border);background:#fff;color:#0f172a;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:13px;}
+    .btn.primary{border-color:transparent;background:var(--accent);color:#fff;}
+    .stack{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    #plot{width:100%;height:720px;background:#fff;border-radius:14px;border:1px solid var(--border);}
+    .note{font-size:11px;color:var(--muted);} footer{padding:8px 16px 20px;color:var(--muted);font-size:12px;}
+    .kpi{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;} .kpi .item{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;}
+    .item b{font-weight:700;} details.equations{margin-top:10px} details.equations summary{cursor:pointer}
+    .mutedbox{padding:10px;border:1px dashed var(--border);border-radius:10px;background:#f8fafc;margin:4px 0;}
+    .summary{margin:0 0 12px 0;}
+    .summary table{width:100%;border-collapse:collapse;font-size:12px;}
+    .summary th,.summary td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle;}
+    .summary th{background:#f8fafc;text-align:left;white-space:nowrap;}
+    .summary caption{caption-side:top;text-align:left;font-weight:700;margin-bottom:4px;color:#334155;}
+    .hidden{display:none;}
+    .tables{display:grid;gap:12px;margin:10px 0;}
+    .tables table{width:100%;border-collapse:collapse;font-size:12px;}
+    .tables th,.tables td{border:1px solid var(--border);padding:6px 8px;text-align:right;}
+    .tables th{background:#f8fafc;text-align:center;}
+    .tables .rowhdr{white-space:nowrap;text-align:left;font-weight:600;}
+    .bc-box{padding:12px;border:1px dashed var(--border);border-radius:10px;background:#f8fafc;}
+    .bc-grid{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto 1fr auto;gap:0;width:220px;height:160px;margin:8px auto;}
+    .bc-edge{display:flex;align-items:center;justify-content:center;}
+    .bc-edge button{font-size:12px;font-weight:700;padding:5px 14px;border:2px solid var(--accent);border-radius:6px;cursor:pointer;background:#fff;color:var(--accent);min-width:38px;transition:all .15s;}
+    .bc-edge button.is-c{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .bc-center{display:flex;align-items:center;justify-content:center;background:#f1f5f9;border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--muted);text-align:center;padding:4px;}
+    .bc-top{grid-column:2;grid-row:1;} .bc-left{grid-column:1;grid-row:2;} .bc-plate{grid-column:2;grid-row:2;} .bc-right{grid-column:3;grid-row:2;} .bc-bottom{grid-column:2;grid-row:3;}
+    .bc-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;justify-content:center;}
+    .bc-presets button{font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:#fff;}
+    .bc-presets button:hover{background:#f1f5f9;}
+    .bc-label{text-align:center;font-weight:700;font-size:14px;margin-top:6px;color:var(--fg);letter-spacing:1px;}
+  </style>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
+  <script>window.MathJax={tex:{inlineMath:[['$','$'],['\(','\)']]},svg:{fontCache:'global'}};</script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <header>
+    <h1>矩形板の駆動点インピーダンス（リアルタイム）</h1>
+    <span class="subtle">★: オクターブ平均 ／ ●: 無限長（周波数非依存）／ ▲: f<sub>11</sub>〜f<sub>32</sub></span>
+  </header>
+
+  <div class="container">
+    <div class="card" id="controls">
+      <h2>設定</h2>
+      <div class="grid1">
+        <div class="bc-box">
+          <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--muted);">境界条件（各辺クリックで S⇔C 切替）</div>
+          <div class="bc-grid">
+            <div class="bc-edge bc-top"><button id="bc_top" title="上辺 (y=Ly)">S</button></div>
+            <div class="bc-edge bc-left"><button id="bc_left" title="左辺 (x=0)">S</button></div>
+            <div class="bc-center bc-plate"><span>Lx × Ly<br>板</span></div>
+            <div class="bc-edge bc-right"><button id="bc_right" title="右辺 (x=Lx)">S</button></div>
+            <div class="bc-edge bc-bottom"><button id="bc_bottom" title="下辺 (y=0)">S</button></div>
+          </div>
+          <div class="bc-label" id="bcLabel">SSSS</div>
+          <div class="bc-presets">
+            <button data-bc="SSSS">SSSS</button>
+            <button data-bc="CCCC">CCCC</button>
+            <button data-bc="SCSC">SCSC</button>
+            <button data-bc="CSCS">CSCS</button>
+            <button data-bc="CCSS">CCSS</button>
+            <button data-bc="SSCC">SSCC</button>
+            <button data-bc="CSSS">CSSS</button>
+            <button data-bc="CCCS">CCCS</button>
+            <button data-bc="CSSC">CSSC</button>
+            <button data-bc="SCCS">SCCS</button>
+          </div>
+        </div>
+
+        <div class="row"><label for="material">材料プリセット</label><select id="material"></select></div>
+        <div class="row"><label for="E">E [Pa]</label><input id="E" type="text" value="2.1e10" placeholder="例) 2.1e10 / 70GPa"/></div>
+        <div class="row"><label for="rho">ρ [kg/m³]</label><input id="rho" type="number" step="1" min="10" value="2300"/></div>
+        <div class="row"><label for="nu">ポアソン比 ν [-]</label><input id="nu" type="number" step="0.01" min="0.0" max="0.49" value="0.20"/></div>
+        <div class="row"><label for="eta">損失係数 η [%]</label><input id="eta" type="number" step="0.01" min="0.0001" value="0.50"/></div>
+        <div class="row"><label for="thick">板厚 h [mm]</label><input id="thick" type="number" step="0.1" min="0.1" value="200"/></div>
+        <div class="row"><label for="Lx">Lx [m]</label><input id="Lx" type="number" step="0.01" min="0.1" value="3.6"/></div>
+        <div class="row"><label for="Ly">Ly [m]</label><input id="Ly" type="number" step="0.01" min="0.1" value="2.7"/></div>
+
+        <div class="mutedbox">
+          <div class="row"><label>測定点モード</label>
+            <div class="stack">
+              <label><input type="radio" name="ptmode" id="pt_single" checked> 単点</label>
+              <label><input type="radio" name="ptmode" id="pt_grid"> 格子平均</label>
+            </div>
+          </div>
+          <div class="row" id="row_x0"><label for="x0mm">測定点 x [mm]</label><input id="x0mm" type="number" step="1" min="0" value="1800"/></div>
+          <div class="row" id="row_y0"><label for="y0mm">測定点 y [mm]</label><input id="y0mm" type="number" step="1" min="0" value="1350"/></div>
+          <div class="row hidden" id="row_Nx"><label for="Nx">分割数 Nx</label><input id="Nx" type="number" step="1" min="1" value="3"/></div>
+          <div class="row hidden" id="row_Ny"><label for="Ny">分割数 Ny</label><input id="Ny" type="number" step="1" min="1" value="3"/></div>
+          <div class="row"><label>平均方法</label>
+            <div class="stack">
+              <label><input type="radio" name="avgmode" id="avg_linear" checked> 線形平均</label>
+              <label><input type="radio" name="avgmode" id="avg_db"> dB値平均</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row"><label for="fmin">f<sub>min</sub> [Hz]</label><input id="fmin" type="number" step="1" min="10" value="10"/></div>
+        <div class="row"><label for="fmax">f<sub>max</sub> [Hz]</label><input id="fmax" type="number" step="10" min="20" max="2000" value="2000"/></div>
+        <div class="row"><label for="mx">m<sub>max</sub></label><input id="mx" type="number" step="1" min="1" value="30"/></div>
+        <div class="row"><label for="ny">n<sub>max</sub></label><input id="ny" type="number" step="1" min="1" value="30"/></div>
+
+        <div class="section">
+          <div class="row"><label>表示</label>
+            <div class="stack">
+              <label><input type="checkbox" id="showZ" checked> |Z|</label>
+              <label><input type="checkbox" id="showY"> |Y|</label>
+              <label><input type="checkbox" id="logx" checked> log f</label>
+              <label><input type="checkbox" id="db" checked> dB</label>
+              <label><input type="checkbox" id="bandbg" checked> Oct背景</label>
+            </div>
+          </div>
+          <div class="row"><label>★/●/▲</label>
+            <div class="stack">
+              <button class="btn" id="toggleOct">★</button>
+              <button class="btn" id="toggleInf">●</button>
+              <button class="btn" id="toggleModes">▲</button>
+            </div>
+          </div>
+        </div>
+        <div class="kpi">
+          <div class="item"><span class="subtle">D = </span><b id="kpiD">—</b> <span class="subtle">[N·m]</span></div>
+          <div class="item"><span class="subtle">m' = </span><b id="kpimm">—</b> <span class="subtle">[kg/m²]</span></div>
+          <div class="item"><span class="subtle">f<sub>11</sub> = </span><b id="kpif11">—</b> <span class="subtle">[Hz]</span></div>
+          <div class="item"><span class="subtle">BC = </span><b id="kpiBC">SSSS</b></div>
+        </div>
+        <div class="section">
+          <div class="stack">
+            <button class="btn primary" id="exportPng">PNG保存</button>
+            <button class="btn" id="reset">リセット</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="summary" class="summary">
+        <table><caption>現在の条件</caption><tbody id="summaryBody"><tr><th>—</th><td>—</td></tr></tbody></table>
+      </div>
+      <div class="tables">
+        <table id="bandTable"><caption>★/● オクターブバンド値</caption><thead id="bandHead"></thead><tbody id="bandBody"></tbody></table>
+        <table id="modeTable"><caption>共振周波数リスト</caption><thead id="modeHead"></thead><tbody id="modeBody"></tbody></table>
+      </div>
+      <div id="plot"></div>
+      <div class="note">★: 1/1オクターブ中心（16〜2000 Hz）でのバンド平均。●: 無限長（$Z_\infty=8\sqrt{D\,\rho h}$）。▲: f<sub>11</sub>〜f<sub>32</sub>。</div>
+      <details class="equations">
+        <summary>計算式を表示</summary>
+        <div>
+          <h3>梁関数法（Warburton 1954）</h3>
+          <p>$\psi_{pq}(x,y)=X_p(x)\,Y_q(y)$</p>
+          <h4>SS: $X_m=\sin(m\pi x/L)$, $\beta_m L=m\pi$, $\int X^2=L/2$</h4>
+          <h4>CC: $\cos\beta L\cosh\beta L=1$, $\int X^2=L$</h4>
+          <h4>CS: $\tan\beta L=\tanh\beta L$, $\int X^2=L$</h4>
+          <p>$$ \omega_{pq}^2=\frac{D}{\rho h}\left[\beta_p^4+\gamma_q^4+2\,\frac{\int X_p'^2}{\int X_p^2}\,\frac{\int Y_q'^2}{\int Y_q^2}\right] $$（梁関数の Rayleigh 商、Warburton。SS–SS では $\omega_{pq}=\sqrt{D/\rho h}(\beta_p^2+\gamma_q^2)$ に一致）</p>
+          <p>$$ Y(\omega)=\frac{i\omega}{\rho h L_x L_y}\sum_p\sum_q \frac{X_p^2(x_0)\,Y_q^2(y_0)\,L_xL_y}{N_xN_y\,[\omega_{pq}^2(1+i\eta)-\omega^2]} $$</p>
+        </div>
+      </details>
+    </div>
+  </div>
+  <footer><span class="subtle">Kirchhoff thin plate — beam function method (SS/CC/CS per direction). p=1..m<sub>max</sub>, q=1..n<sub>max</sub>.</span></footer>
+
+  <script>
+  (function(){
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const EPS = 1e-30;
+
+    function cdiv(a,b){ const d=b.re*b.re+b.im*b.im||EPS; return {re:(a.re*b.re+a.im*b.im)/d, im:(a.im*b.re-a.re*b.im)/d}; }
+    function cinv(a){ const d=a.re*a.re+a.im*a.im||EPS; return {re:a.re/d, im:-a.im/d}; }
+    const cabs = z => Math.hypot(z.re, z.im);
+
+    // ═══════════════════════════════════════════════════
+    //  BEAM EIGENVALUE SOLVERS
+    // ═══════════════════════════════════════════════════
+
+    const _rootCache = {};
+
+    function newtonSolve(f, fp, x0){
+      let x = x0;
+      for(let i=0; i<60; i++){
+        const fv = f(x), dfv = fp(x);
+        if(Math.abs(dfv) < 1e-30) break;
+        const dx = fv/dfv; x -= dx;
+        if(Math.abs(dx) < 1e-14 * Math.abs(x)) break;
+      }
+      return x;
+    }
+
+    function betaL_SS(nmax){
+      const key="SS_"+nmax; if(_rootCache[key]) return _rootCache[key];
+      const r=[]; for(let m=1;m<=nmax;m++) r.push(m*Math.PI);
+      return (_rootCache[key]=r);
+    }
+
+    function betaL_CC(nmax){
+      const key="CC_"+nmax; if(_rootCache[key]) return _rootCache[key];
+      const f  = x => Math.cos(x)*Math.cosh(x)-1;
+      const fp = x => -Math.sin(x)*Math.cosh(x)+Math.cos(x)*Math.sinh(x);
+      const r=[];
+      for(let m=1;m<=nmax;m++){
+        let x0;
+        if(m===1) x0=4.7300407448627; else if(m===2) x0=7.8532046240958;
+        else if(m===3) x0=10.9956078380017; else x0=(2*m+1)*Math.PI/2;
+        r.push(newtonSolve(f,fp,x0));
+      }
+      return (_rootCache[key]=r);
+    }
+
+    function betaL_CS(nmax){
+      const key="CS_"+nmax; if(_rootCache[key]) return _rootCache[key];
+      const f  = x => Math.sin(x)*Math.cosh(x)-Math.cos(x)*Math.sinh(x);
+      const fp = x => 2*Math.sin(x)*Math.sinh(x);
+      const r=[];
+      for(let m=1;m<=nmax;m++){
+        let x0;
+        if(m===1) x0=3.9266023120479; else if(m===2) x0=7.0685834705770;
+        else if(m===3) x0=10.2101761241668; else x0=(4*m+1)*Math.PI/4;
+        r.push(newtonSolve(f,fp,x0));
+      }
+      return (_rootCache[key]=r);
+    }
+
+    function sigma_beam(bL){
+      return (Math.cosh(bL)-Math.cos(bL))/(Math.sinh(bL)-Math.sin(bL));
+    }
+
+    function getBetaLRoots(t, n){
+      if(t==="SS") return betaL_SS(n);
+      if(t==="CC") return betaL_CC(n);
+      return betaL_CS(n);
+    }
+
+    /* Clamped–clamped / clamped–simply-supported beam function and its slope on ξ = x/L,
+       written without cosh/sinh so that it stays accurate for high modes:
+       cosh − σ·sinh = ((1−σ)e^{bξ} + (1+σ)e^{−bξ})/2, with (1−σ)e^{bξ} formed from e^{bξ−bL}. */
+    function beamFn(bL, xi){
+      const sig = sigma_beam(bL);
+      const den = 1 - Math.exp(-2*bL) - 2*Math.sin(bL)*Math.exp(-bL);       // (sinh bL − sin bL)·2e^{−bL}
+      const oneMinusSig = (Math.cos(bL) - Math.sin(bL) - Math.exp(-bL));     // ·1/(sinh bL − sin bL)
+      const bx = bL*xi;
+      const grow = oneMinusSig * 2*Math.exp(bx - bL) / den;                  // (1−σ)e^{bx}
+      const decay = (1 + sig) * Math.exp(-bx);
+      const X  = 0.5*(grow + decay) - Math.cos(bx) + sig*Math.sin(bx);
+      const dX = bL*(0.5*(grow - decay) + Math.sin(bx) + sig*Math.cos(bx)); // dX/dξ
+      return {X, dX};
+    }
+    /* ∫X² dξ and ∫X'² dξ / ∫X² dξ over 0..1 (Simpson). For SS these are 1/2 and (mπ)². */
+    const _intCache = {};
+    function beamIntegrals(type, m){
+      const key = type + m; if(_intCache[key]) return _intCache[key];
+      if(type === "SS"){ return (_intCache[key] = {norm: 0.5, slope2: (m*Math.PI)**2}); }
+      const bL = (type === "CC" ? betaL_CC(m) : betaL_CS(m))[m-1];
+      const N = 4000; let sX = 0, sD = 0;
+      for(let i = 0; i <= N; i++){
+        const w = (i === 0 || i === N) ? 1 : (i % 2 ? 4 : 2);
+        const {X, dX} = beamFn(bL, i/N); sX += w*X*X; sD += w*dX*dX;
+      }
+      sX /= 3*N; sD /= 3*N;
+      return (_intCache[key] = {norm: sX, slope2: sD / sX});
+    }
+    /* Natural angular frequency by the Rayleigh quotient of the beam-function product
+       (Warburton): ω² = (D/ρh)[β_p⁴ + γ_q⁴ + 2 (∫X'²/∫X²)(∫Y'²/∫Y²)]. Exact for SS–SS. */
+    function omegaPQ(xType, yType, p, q, Lx, Ly, D, m){
+      const bx = getBetaLRoots(xType, p)[p-1], by = getBetaLRoots(yType, q)[q-1];
+      const ix = beamIntegrals(xType, p).slope2, iy = beamIntegrals(yType, q).slope2;
+      const w2 = (D/m) * ((bx/Lx)**4 + (by/Ly)**4 + 2*(ix/Lx**2)*(iy/Ly**2));
+      return Math.sqrt(w2);
+    }
+
+    function beamEval(bcType, x0, L, mmax){
+      const vals=[], norms=[];
+      if(bcType==="SS"){
+        const roots=betaL_SS(mmax);
+        for(let m=0;m<mmax;m++){
+          vals.push(Math.sin(roots[m]*x0/L));
+          norms.push(L/2);
+        }
+      } else {
+        const roots = bcType==="CC" ? betaL_CC(mmax) : betaL_CS(mmax);
+        for(let m=0;m<mmax;m++){
+          vals.push(beamFn(roots[m], x0/L).X);
+          norms.push(L*beamIntegrals(bcType, m+1).norm);
+        }
+      }
+      return {vals, norms};
+    }
+
+    function classifyBeam(endA, endB){
+      if(endA==='S'&&endB==='S') return {type:"SS",flip:false};
+      if(endA==='C'&&endB==='C') return {type:"CC",flip:false};
+      if(endA==='C'&&endB==='S') return {type:"CS",flip:false};
+      return {type:"CS",flip:true};
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  MATERIAL & STATE
+    // ═══════════════════════════════════════════════════
+
+    const MAT={
+      "コンクリート":{rho:2.3e3,E:2.1e10,eta:0.005,nu:0.20},
+      "軽量コンクリート":{rho:1.5e3,E:0.5e10,eta:0.005,nu:0.20},
+      "発泡コンクリート":{rho:0.6e3,E:0.16e10,eta:0.005,nu:0.20},
+      "石こうボード":{rho:0.8e3,E:0.18e10,eta:0.005,nu:0.30},
+      "特殊石こうボード":{rho:1.1e3,E:0.2e10,eta:0.005,nu:0.30},
+      "フレキシブル板":{rho:1.9e3,E:0.2e10,eta:0.005,nu:0.30},
+      "ハードボード":{rho:0.9e3,E:0.6e10,eta:0.005,nu:0.30},
+      "合板":{rho:0.6e3,E:0.5e10,eta:0.005,nu:0.30},
+      "コルク":{rho:0.25e3,E:6.0e7,eta:0.005,nu:0.30},
+      "ガラス":{rho:2500,E:70.0e9,eta:0.005,nu:0.23},
+      "硬質塩ビ":{rho:1.4e3,E:0.35e10,eta:0.012,nu:0.35},
+      "ゴム(硬度50)":{rho:1.11e3,E:0.46e7,eta:0.10,nu:0.49},
+      "手動入力":{rho:0,E:0,eta:0.01,nu:0.30}
+    };
+
+    const OCT=[16,31.5,63,125,250,500,1000,2000], BF=Math.SQRT2;
+
+    const S={
+      E:2.1e10, rho:2300, nu:0.20, eta:0.005, h:0.200,
+      Lx:3.6, Ly:2.7, x0mm:1800, y0mm:1350,
+      Nx:3, Ny:3, avgMode:"linear",
+      fmin:10, fmax:2000, mx:30, ny:30,
+      showZ:true, showY:false, logx:true, db:true,
+      showOct:true, showInf:true, showModes:true, bandBg:true,
+      bcLeft:'S', bcRight:'S', bcBottom:'S', bcTop:'S'
+    };
+
+    const bcStr=()=> S.bcLeft+S.bcRight+S.bcBottom+S.bcTop;
+    const xB=()=> classifyBeam(S.bcLeft,S.bcRight);
+    const yB=()=> classifyBeam(S.bcBottom,S.bcTop);
+    const Df=(E,nu,h)=> E*h*h*h/(12*(1-nu*nu));
+    const mpf=(rho,h)=> rho*h;
+    const Zinf=(E,nu,rho,h)=> 8*Math.sqrt(Df(E,nu,h)*(rho*h));
+
+    function fmn(m,n){
+      const xb=xB(), yb=yB();
+      return omegaPQ(xb.type, yb.type, m, n, S.Lx, S.Ly, Df(S.E,S.nu,S.h), mpf(S.rho,S.h))/(2*Math.PI);
+    }
+
+    function mobilityAtPoint(freqs, x0, y0){
+      const {E,nu,rho,h,Lx,Ly,eta,mx,ny}=S;
+      const xb=xB(), yb=yB();
+      const ex0=xb.flip?(Lx-x0):x0, ey0=yb.flip?(Ly-y0):y0;
+      const xE=beamEval(xb.type,ex0,Lx,mx);
+      const yE=beamEval(yb.type,ey0,Ly,ny);
+      const bLx=getBetaLRoots(xb.type,mx);
+      const bLy=getBetaLRoots(yb.type,ny);
+      const Mplate=rho*h*Lx*Ly;
+      const Y=new Array(freqs.length).fill(0).map(()=>({re:0,im:0}));
+      for(let p=0;p<mx;p++){
+        const px=xE.vals[p], nx_=xE.norms[p];
+        for(let q=0;q<ny;q++){
+          const py=yE.vals[q], ny_=yE.norms[q];
+          const omg=omegaPQ(xb.type, yb.type, p+1, q+1, Lx, Ly, Df(E,nu,h), mpf(rho,h));
+          const omg2=omg*omg;
+          const phi2n=(px*px*py*py*Lx*Ly)/(nx_*ny_);
+          const C=phi2n/Mplate;
+          for(let i=0;i<freqs.length;i++){
+            const w=2*Math.PI*freqs[i];
+            const dR=omg2-w*w, dI=eta*omg2;
+            const d=dR*dR+dI*dI||EPS;
+            Y[i].re+=C*w*dI/d;
+            Y[i].im+=C*w*dR/d;
+          }
+        }
+      }
+      return Y;
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  HELPERS
+    // ═══════════════════════════════════════════════════
+
+    function parseSci(t){
+      const s=(t||"").toString().trim().toLowerCase();
+      if(!s) return NaN;
+      const u=s.endsWith("gpa")?1e9:s.endsWith("mpa")?1e6:s.endsWith("pa")?1:1;
+      return Number(s.replace(/gpa|mpa|pa$/,""))*u;
+    }
+    function toExp(n,sig){
+      const s=Number(n).toExponential((sig||3)-1), m=s.split("e");
+      return m[0].replace(/\.?0+$/,"")+"e"+String(Number(m[1]));
+    }
+
+    function getPositions(){
+      if(!$("pt_grid").checked) return [[S.x0mm/1000, S.y0mm/1000]];
+      const xs=Array.from({length:S.Nx},(_,i)=>(i+0.5)/S.Nx*S.Lx);
+      const ys=Array.from({length:S.Ny},(_,j)=>(j+0.5)/S.Ny*S.Ly);
+      const pts=[]; for(const x of xs) for(const y of ys) pts.push([x,y]); return pts;
+    }
+
+    function computeAvg(freqs){
+      const pts=getPositions(), n=pts.length;
+      let aZ=new Float64Array(freqs.length), aY=new Float64Array(freqs.length);
+      for(const [x,y] of pts){
+        const Yc=mobilityAtPoint(freqs,x,y), Zc=Yc.map(cinv);
+        if(S.avgMode==="db"){
+          for(let i=0;i<freqs.length;i++){
+            aZ[i]+=20*Math.log10(Math.max(cabs(Zc[i]),1e-30));
+            aY[i]+=20*Math.log10(Math.max(cabs(Yc[i]),1e-30));
+          }
+        } else {
+          for(let i=0;i<freqs.length;i++){ aZ[i]+=cabs(Zc[i]); aY[i]+=cabs(Yc[i]); }
+        }
+      }
+      for(let i=0;i<freqs.length;i++){ aZ[i]/=n; aY[i]/=n; }
+      return {yZ:Array.from(aZ), yY:Array.from(aY), alreadyDB:S.avgMode==="db"};
+    }
+
+    function interpY(xa,ya,x){
+      if(x<=xa[0]) return ya[0]; if(x>=xa[xa.length-1]) return ya[ya.length-1];
+      let lo=0,hi=xa.length-1; while(hi-lo>1){const m=(lo+hi)>>1; if(xa[m]>x)hi=m;else lo=m;}
+      const t=(Math.log(x)-Math.log(xa[lo]))/(Math.log(xa[hi])-Math.log(xa[lo]));
+      return ya[lo]*(1-t)+ya[hi]*t;
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  TABLES
+    // ═══════════════════════════════════════════════════
+
+    function buildBandTable(freqs, pY){
+      const hd=$("bandHead"),bd=$("bandBody"), cells=["<th></th>"], cols=[];
+      OCT.forEach(fc=>{ const lo=fc/BF,hi=fc*BF; if(hi<S.fmin||lo>S.fmax)return; cells.push(`<th>${fc}</th>`); cols.push(fc); });
+      hd.innerHTML=`<tr>${cells.join("")}</tr>`;
+      const mv=cols.map(fc=>{ const lo=fc/BF,hi=fc*BF; let a=0,c=0;
+        for(let i=0;i<freqs.length;i++) if(freqs[i]>=lo&&freqs[i]<=hi){a+=pY[i];c++;}
+        return c?a/c:NaN; });
+      const zi=Zinf(S.E,S.nu,S.rho,S.h), zv=S.db?20*Math.log10(zi):zi;
+      bd.innerHTML=
+        `<tr><td class="rowhdr">★ Oct (${bcStr()})</td>${mv.map(v=>`<td>${isFinite(v)?v.toFixed(1):""}</td>`).join("")}</tr>`+
+        `<tr><td class="rowhdr">● Infinite</td>${cols.map(_=>`<td>${zv.toFixed(1)}</td>`).join("")}</tr>`;
+    }
+    function buildModeTable(){
+      const modes=[[1,1],[1,2],[2,1],[2,2],[3,1],[3,2]];
+      $("modeHead").innerHTML=`<tr>${modes.map(([m,n])=>`<th>f_${m}${n}</th>`).join("")}</tr>`;
+      $("modeBody").innerHTML=`<tr>${modes.map(([m,n])=>`<td>${fmn(m,n).toFixed(1)}</td>`).join("")}</tr>`;
+    }
+    function updateSummary(){
+      const d=Df(S.E,S.nu,S.h), mps=mpf(S.rho,S.h), zi=Zinf(S.E,S.nu,S.rho,S.h), f11=fmn(1,1);
+      const xb=xB(),yb=yB();
+      const rows=[
+        [bcStr(),"境界条件"],
+        [`x: ${xb.type}${xb.flip?" (flip)":""},  y: ${yb.type}${yb.flip?" (flip)":""}`,"梁タイプ"],
+        [toExp(S.E,3),"E [Pa]"],[S.rho.toFixed(0),"ρ"],[S.nu.toFixed(2),"ν"],
+        [(S.eta*100).toFixed(2),"η [%]"],[(S.h*1000).toFixed(1),"h [mm]"],
+        [`${S.Lx.toFixed(3)}, ${S.Ly.toFixed(3)}`,"Lx, Ly"],
+        [$("pt_grid").checked?`${S.Nx}×${S.Ny}`:`${S.x0mm}, ${S.y0mm}`,$("pt_grid").checked?"格子":"測定点 [mm]"],
+        [d.toExponential(3),"D [N·m]"],[mps.toFixed(2),"m' [kg/m²]"],
+        [`${zi.toExponential(3)} / ${(20*Math.log10(zi)).toFixed(1)}`,"Z∞ / dB"],
+        [f11.toFixed(1),"f11 [Hz]"]
+      ];
+      $("summaryBody").innerHTML=rows.map(([v,k])=>`<tr><th>${v}</th><td>${k}</td></tr>`).join("");
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  DRAW
+    // ═══════════════════════════════════════════════════
+
+    function pullFromUI(){
+      S.E=parseSci($("E").value); S.rho=parseFloat($("rho").value);
+      S.nu=parseFloat($("nu").value); S.eta=parseFloat($("eta").value)/100;
+      S.h=parseFloat($("thick").value)/1000;
+      S.Lx=parseFloat($("Lx").value); S.Ly=parseFloat($("Ly").value);
+      S.x0mm=parseFloat($("x0mm").value); S.y0mm=parseFloat($("y0mm").value);
+      S.Nx=parseInt($("Nx").value,10); S.Ny=parseInt($("Ny").value,10);
+      S.avgMode=$("avg_db").checked?"db":"linear";
+      S.fmin=parseFloat($("fmin").value); S.fmax=parseFloat($("fmax").value);
+      S.mx=parseInt($("mx").value,10); S.ny=parseInt($("ny").value,10);
+      S.showZ=$("showZ").checked; S.showY=$("showY").checked;
+      S.logx=$("logx").checked; S.db=$("db").checked; S.bandBg=$("bandbg").checked;
+      if([S.E,S.rho,S.nu,S.eta,S.h,S.Lx,S.Ly].some(isNaN)) return;
+      if(S.h<=0||S.Lx<=0||S.Ly<=0||S.rho<=0) return;
+      draw();
+    }
+
+    let _raf=null;
+    function scheduleDraw(){ if(_raf)cancelAnimationFrame(_raf); _raf=requestAnimationFrame(()=>pullFromUI()); }
+
+    function draw(){
+      const {fmin,fmax}=S, N=2000, freqs=[];
+      for(let i=0;i<N;i++) freqs.push(fmin*Math.pow(fmax/fmin,i/(N-1)));
+
+      let yZ,yY,alreadyDB;
+      if($("pt_grid").checked){
+        ({yZ,yY,alreadyDB}=computeAvg(freqs));
+      } else {
+        const Yc=mobilityAtPoint(freqs,S.x0mm/1000,S.y0mm/1000), Zc=Yc.map(cinv);
+        yZ=Zc.map(cabs); yY=Yc.map(cabs); alreadyDB=false;
+      }
+
+      let pZ=yZ.slice(), pY=yY.slice();
+      if(S.db&&!alreadyDB){
+        pZ=pZ.map(v=>20*Math.log10(Math.max(v,1e-30)));
+        pY=pY.map(v=>20*Math.log10(Math.max(v,1e-30)));
+      }
+
+      const zi=Zinf(S.E,S.nu,S.rho,S.h), d=Df(S.E,S.nu,S.h), mps=mpf(S.rho,S.h), f11=fmn(1,1);
+      $("kpiD").textContent=d.toExponential(3);
+      $("kpimm").textContent=mps.toFixed(2);
+      $("kpif11").textContent=f11.toFixed(1);
+      $("kpiBC").textContent=bcStr();
+
+      updateSummary(); buildModeTable();
+      const primary=S.showZ?pZ:pY;
+      buildBandTable(freqs,primary);
+
+      const bc=bcStr(), tr=[];
+      if(S.showZ) tr.push({x:freqs,y:pZ,name:`|Z| (${bc})`,line:{color:"#2563eb",width:1.5},hovertemplate:'f=%{x:.1f}<br>|Z|=%{y:.1f}<extra></extra>'});
+      if(S.showY) tr.push({x:freqs,y:pY,name:`|Y| (${bc})`,line:{color:"#dc2626",width:1.5},hovertemplate:'f=%{x:.1f}<br>|Y|=%{y:.1f}<extra></extra>'});
+
+      if(S.showInf){
+        const zv=S.db?20*Math.log10(zi):zi;
+        tr.push({x:[fmin,fmax],y:[zv,zv],name:"● Z∞",mode:"lines",line:{color:"#16a34a",dash:"dot",width:2}});
+        if(S.showY){const yv=S.db?20*Math.log10(1/zi):1/zi; tr.push({x:[fmin,fmax],y:[yv,yv],name:"● Y∞",mode:"lines",line:{color:"#ea580c",dash:"dot",width:2}});}
+      }
+      if(S.showOct) OCT.forEach(fc=>{
+        const lo=fc/BF,hi=fc*BF; if(hi<fmin||lo>fmax)return;
+        let aZ=0,aY=0,cnt=0;
+        for(let i=0;i<freqs.length;i++) if(freqs[i]>=lo&&freqs[i]<=hi){aZ+=primary[i];aY+=pY[i];cnt++;}
+        if(!cnt)return;
+        if(S.showZ) tr.push({x:[fc],y:[aZ/cnt],mode:"markers",marker:{symbol:"star",size:12,color:"#2563eb"},showlegend:false,hovertemplate:`★${fc}: %{y:.1f}<extra></extra>`});
+        if(S.showY) tr.push({x:[fc],y:[aY/cnt],mode:"markers",marker:{symbol:"star",size:12,color:"#dc2626"},showlegend:false,hovertemplate:`★${fc}: %{y:.1f}<extra></extra>`});
+      });
+      if(S.showModes) [[1,1],[1,2],[2,1],[2,2],[3,1],[3,2]].forEach(([m,n])=>{
+        const fm=fmn(m,n); if(fm<fmin||fm>fmax)return;
+        const yz=interpY(freqs,primary,fm);
+        tr.push({x:[fm],y:[yz],mode:"markers+text",text:[`f${m}${n}`],textposition:"top center",textfont:{size:10,color:"#475569"},marker:{symbol:"triangle-up",size:9,color:"#7c3aed"},showlegend:false,hovertemplate:`f${m}${n}=${fm.toFixed(1)}<br>%{y:.1f}<extra></extra>`});
+      });
+
+      const shapes=[];
+      if(S.bandBg){const cols=["rgba(37,99,235,0.04)","rgba(37,99,235,0.08)"];
+        OCT.forEach((fc,idx)=>{const lo=fc/BF,hi=fc*BF;if(hi<fmin||lo>fmax)return;
+          shapes.push({type:"rect",xref:"x",yref:"paper",x0:Math.max(lo,fmin),x1:Math.min(hi,fmax),y0:0,y1:1,fillcolor:cols[idx%2],line:{width:0}});
+        });
+      }
+
+      Plotly.react("plot",tr,{
+        margin:{l:60,r:20,t:40,b:50},
+        xaxis:{title:"Frequency [Hz]",type:S.logx?"log":"linear",range:S.logx?[Math.log10(fmin),Math.log10(fmax)]:[fmin,fmax],gridcolor:"#e2e8f0",zeroline:false},
+        yaxis:{title:(S.showZ?"Z":"")+(S.showZ&&S.showY?" / ":"")+(S.showY?"Y":"")+(S.db?" [dB]":""),gridcolor:"#e2e8f0",zeroline:false},
+        legend:{x:1,xanchor:"right",y:1,bgcolor:"rgba(255,255,255,0.8)"},
+        shapes,hovermode:"closest",plot_bgcolor:"#fff",paper_bgcolor:"#fff",
+        title:{text:`駆動点インピーダンス — ${bc}`,font:{size:14}}
+      },{responsive:true});
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  BC EDITOR
+    // ═══════════════════════════════════════════════════
+
+    const bcBtns={left:$("bc_left"),right:$("bc_right"),bottom:$("bc_bottom"),top:$("bc_top")};
+    const bcKeys={left:"bcLeft",right:"bcRight",bottom:"bcBottom",top:"bcTop"};
+
+    function syncBC(){
+      for(const [e,btn] of Object.entries(bcBtns)){
+        const v=S[bcKeys[e]]; btn.textContent=v;
+        btn.className=v==='C'?'is-c':'';
+      }
+      $("bcLabel").textContent=bcStr();
+    }
+    for(const e of Object.keys(bcBtns))
+      bcBtns[e].addEventListener("click",()=>{ S[bcKeys[e]]=S[bcKeys[e]]==='S'?'C':'S'; syncBC(); scheduleDraw(); });
+
+    document.querySelectorAll(".bc-presets button").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        const c=btn.dataset.bc; if(!c||c.length!==4)return;
+        S.bcLeft=c[0]; S.bcRight=c[1]; S.bcBottom=c[2]; S.bcTop=c[3];
+        syncBC(); scheduleDraw();
+      });
+    });
+
+    // ═══════════════════════════════════════════════════
+    //  WIRING
+    // ═══════════════════════════════════════════════════
+
+    (function initMat(){
+      const sel=$("material");
+      sel.innerHTML=Object.keys(MAT).map(k=>`<option value="${k}">${k}</option>`).join("");
+      sel.value="コンクリート";
+    })();
+
+    $("material").addEventListener("change",function(){
+      const p=MAT[this.value]; if(!p)return;
+      if(this.value!=="手動入力"){
+        $("E").value=toExp(p.E,3); $("rho").value=p.rho; $("nu").value=p.nu; $("eta").value=(p.eta*100).toFixed(2);
+      }
+      pullFromUI();
+    });
+
+    function updateVis(){
+      const g=$("pt_grid").checked;
+      $("row_x0").classList.toggle("hidden",g); $("row_y0").classList.toggle("hidden",g);
+      $("row_Nx").classList.toggle("hidden",!g); $("row_Ny").classList.toggle("hidden",!g);
+    }
+
+    for(const id of ["E","rho","nu","eta","thick","Lx","Ly","x0mm","y0mm","Nx","Ny","fmin","fmax","mx","ny"])
+      $(id).addEventListener("input",scheduleDraw);
+    for(const id of ["showZ","showY","logx","db","bandbg"])
+      $(id).addEventListener("change",scheduleDraw);
+    $("pt_single").addEventListener("change",()=>{updateVis();scheduleDraw();});
+    $("pt_grid").addEventListener("change",()=>{updateVis();scheduleDraw();});
+    $("avg_linear").addEventListener("change",scheduleDraw);
+    $("avg_db").addEventListener("change",scheduleDraw);
+    $("toggleOct").addEventListener("click",()=>{S.showOct=!S.showOct;scheduleDraw();});
+    $("toggleInf").addEventListener("click",()=>{S.showInf=!S.showInf;scheduleDraw();});
+    $("toggleModes").addEventListener("click",()=>{S.showModes=!S.showModes;scheduleDraw();});
+    $("exportPng").addEventListener("click",()=>Plotly.downloadImage($("plot"),{format:"png",width:1600,height:900,filename:"impedance_"+bcStr()}));
+    $("reset").addEventListener("click",()=>{
+      S.bcLeft='S';S.bcRight='S';S.bcBottom='S';S.bcTop='S'; syncBC();
+      $("material").value="コンクリート";
+      $("E").value="2.1e10";$("rho").value=2300;$("nu").value=0.20;$("eta").value=0.50;
+      $("thick").value=200;$("Lx").value=3.6;$("Ly").value=2.7;
+      $("x0mm").value=1800;$("y0mm").value=1350;
+      $("fmin").value=10;$("fmax").value=2000;$("mx").value=30;$("ny").value=30;
+      $("showZ").checked=true;$("showY").checked=false;$("logx").checked=true;$("db").checked=true;$("bandbg").checked=true;
+      $("pt_single").checked=true;updateVis();
+      S.showOct=true;S.showInf=true;S.showModes=true;
+      scheduleDraw();
+    });
+
+    syncBC();
+    window.addEventListener("load",()=>pullFromUI());
+  })();
+  </script>
+</body>
+</html>

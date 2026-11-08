@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>wav2Fmax — Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&family=Space+Mono:wght@400;700&family=Noto+Serif+JP:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d12; --bg2:#10141e; --bg3:#161c2a;
+  --border:rgba(180,200,255,0.07); --border2:rgba(100,160,255,0.22);
+  --text:#c0cee6; --dim:#4e5f7a; --bright:#e8f0ff;
+  --accent:#4a8fff; --accent2:#7eb8ff;
+  --ok:#34d399; --ng:#f87171; --warn:#fbbf24;
+  --mono:'Space Mono',monospace;
+  --serif:'EB Garamond',Georgia,serif;
+  --jp:'Noto Serif JP',serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--jp);font-size:14px;line-height:1.65;min-height:100vh}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(11,13,18,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.nav-inner{max-width:1280px;margin:0 auto;padding:13px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.nav-brand{display:flex;flex-direction:column;gap:2px}
+.nav-title{font-family:var(--serif);font-size:1.1rem;font-weight:500;color:var(--bright)}
+.nav-sub{font-family:var(--mono);font-size:0.56rem;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+#statusEl{font-family:var(--mono);font-size:0.62rem;color:var(--dim);letter-spacing:.06em}
+
+/* LAYOUT */
+.wrap{max-width:1280px;margin:0 auto;padding:20px 24px 60px;display:grid;grid-template-columns:320px 1fr;gap:14px;align-items:start}
+@media(max-width:900px){.wrap{grid-template-columns:1fr}}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:18px;position:relative;overflow:hidden;animation:fadeUp .5s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent);opacity:.45}
+.card-title{font-family:var(--mono);font-size:0.6rem;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border2)}
+
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;gap:12px}
+.sidebar .card{animation-delay:.05s}
+.sidebar .card:nth-child(2){animation-delay:.1s}
+.sidebar .card:nth-child(3){animation-delay:.15s}
+.sidebar .card:nth-child(4){animation-delay:.2s}
+
+/* CONTROLS */
+.ctrl-g{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.ctrl-lbl{font-family:var(--mono);font-size:0.56rem;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.ctrl-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px}
+
+button{font-family:var(--mono);font-size:0.66rem;letter-spacing:.05em;padding:7px 14px;border:1px solid var(--border2);border-radius:3px;background:transparent;color:var(--accent2);cursor:pointer;transition:all .18s;white-space:nowrap}
+button:hover:not(:disabled){background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.3;cursor:not-allowed}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#3a7fee}
+button.danger{border-color:var(--ng);color:var(--ng)}
+button.danger:hover:not(:disabled){background:var(--ng);color:#fff}
+button.processing{background:var(--ng)!important;border-color:var(--ng)!important;color:#fff!important;animation:prec 1s ease-in-out infinite}
+@keyframes prec{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.4)}55%{box-shadow:0 0 0 6px rgba(248,113,113,0)}}
+
+select,input[type="number"],input[type="text"]{font-family:var(--mono);font-size:0.66rem;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:3px;padding:6px 9px;transition:border-color .18s;width:100%}
+select:focus,input:focus{outline:none;border-color:var(--accent)}
+
+.file-zone{border:1px dashed var(--border2);border-radius:3px;padding:14px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.file-zone:hover,.file-zone.drag{border-color:var(--accent);background:rgba(74,143,255,.05)}
+.file-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.file-name{font-family:var(--mono);font-size:0.62rem;color:var(--dim);margin-top:6px;word-break:break-all}
+
+.check-row{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.8rem;color:var(--text);margin-bottom:6px}
+input[type="checkbox"]{accent-color:var(--accent);width:13px;height:13px;cursor:pointer}
+
+/* LOG */
+#log{font-family:var(--mono);font-size:0.6rem;color:var(--dim);max-height:120px;overflow-y:auto;line-height:1.8;white-space:pre-wrap}
+
+/* TABS */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px}
+.tab{font-family:var(--mono);font-size:0.62rem;letter-spacing:.06em;flex:0 0 auto;padding:6px 12px;border:1px solid var(--border2);border-radius:3px;cursor:pointer;color:var(--dim);background:transparent;transition:all .18s;white-space:nowrap}
+.tab:hover{border-color:var(--accent);color:var(--accent2)}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:0.75rem}
+thead tr{border-bottom:1px solid var(--border2)}
+th{font-family:var(--mono);font-size:0.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);padding:7px 10px;text-align:right;white-space:nowrap}
+th:first-child{text-align:left}
+td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;color:var(--text)}
+td:first-child{text-align:left;font-family:var(--mono);font-size:0.68rem;color:var(--accent2)}
+tr:hover td{background:var(--bg3)}
+th.fc-head{cursor:pointer;color:var(--accent2);transition:color .18s}
+th.fc-head:hover{color:var(--accent)}
+
+/* BAND PLOTS */
+.band-plot{height:200px;margin-bottom:10px;border-radius:3px;background:var(--bg3);border:1px solid var(--border)}
+
+/* SETUP TABLE */
+.setup-table{width:100%;border-collapse:collapse;font-size:0.72rem}
+.setup-table th{font-family:var(--mono);font-size:0.54rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);padding:5px 6px;text-align:left;border-bottom:1px solid var(--border)}
+.setup-table td{padding:5px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
+.setup-table select,.setup-table input{font-size:0.62rem;padding:4px 6px}
+
+/* OVERLAY */
+#overlay{position:fixed;inset:0;background:rgba(11,13,18,.8);backdrop-filter:blur(8px);display:none;z-index:9999;align-items:center;justify-content:center;color:var(--text);flex-direction:column;gap:16px}
+#overlay.vis{display:flex}
+.spinner{width:48px;height:48px;border-radius:50%;border:3px solid var(--border2);border-top-color:var(--accent);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay-txt{font-family:var(--mono);font-size:0.7rem;letter-spacing:.1em;color:var(--dim)}
+
+/* MAIN AREA */
+.main-area{display:flex;flex-direction:column;gap:12px}
+.main-area .card{animation-delay:.08s}
+.main-area .card:nth-child(2){animation-delay:.14s}
+
+.hint{font-size:0.75rem;color:var(--dim);line-height:1.8}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="nav-title">wav2Fmax</div>
+      <div class="nav-sub">Octave Band Analysis &middot; Building Acoustics</div>
+    </div>
+    <div id="statusEl">Ready</div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- File -->
+    <div class="card">
+      <div class="card-title">File Input</div>
+      <div class="file-zone" id="fileZone">
+        <input type="file" id="fileInput" accept=".wav,.wave,.csv,.txt" multiple>
+        <div style="font-family:var(--mono);font-size:0.65rem;color:var(--dim)">Drop WAV / CSV here<br>or click to select</div>
+        <div id="fileName" class="file-name"></div>
+      </div>
+      <div class="ctrl-row" style="margin-top:10px">
+        <button id="loadBtn" disabled class="primary" style="flex:1">Load</button>
+        <label class="check-row" style="margin:0"><input type="checkbox" id="hasHeader" checked><span>header row</span></label>
+      </div>
+      <div class="ctrl-g">
+        <div class="ctrl-lbl">CSV Sample Rate [Hz]</div>
+        <input type="number" id="csvSr" value="25600">
+      </div>
+    </div>
+
+    <!-- Channel setup -->
+    <div class="card" id="setupCard" style="display:none">
+      <div class="card-title">Channel Setup</div>
+      <div id="setupBody"></div>
+    </div>
+
+    <!-- Analysis -->
+    <div class="card" id="configCard" style="display:none">
+      <div class="card-title">Analysis Config</div>
+      <div class="ctrl-g">
+        <div class="ctrl-lbl">Band Type</div>
+        <select id="bandType"><option value="oct">1/1 Octave</option><option value="third">1/3 Octave</option></select>
+      </div>
+      <div class="ctrl-row">
+        <div class="ctrl-g" style="flex:1"><div class="ctrl-lbl">Lo [Hz]</div><select id="bandLo"></select></div>
+        <div class="ctrl-g" style="flex:1"><div class="ctrl-lbl">Hi [Hz]</div><select id="bandHi"></select></div>
+      </div>
+      <div class="ctrl-g">
+        <div class="ctrl-lbl">Time Weighting</div>
+        <select id="timeWeight">
+          <option value="fast" selected>Fast (125 ms)</option>
+          <option value="slow">Slow (1 s)</option>
+          <option value="leq">Leq (window)</option>
+          <option value="maxhold">MaxHold</option>
+          <option value="none">None</option>
+        </select>
+      </div>
+      <div class="ctrl-g">
+        <div class="ctrl-lbl">Leq Window [s]</div>
+        <input type="number" id="leqWin" value="1.0" step="0.1">
+      </div>
+      <button id="processBtn" class="primary" disabled style="width:100%;margin-top:8px;padding:10px">Process</button>
+    </div>
+
+    <!-- Log -->
+    <div class="card">
+      <div class="card-title">Log</div>
+      <div id="log"></div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-area">
+
+    <div class="card">
+      <div class="card-title" id="summaryTitle">Summary</div>
+      <div class="tabs" id="tabs" style="display:none"></div>
+      <div class="table-wrap" id="tableWrap"></div>
+      <div class="hint" style="margin-top:8px">周波数ヘッダをクリックで該当バンドへスクロール。表頭 = 周波数、表側 = 指標。</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Band Plots</div>
+      <div id="plotsWrap"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- overlay -->
+<div id="overlay" role="progressbar" aria-label="Processing">
+  <div class="spinner"></div>
+  <div class="overlay-txt">計算中…</div>
+</div>
+
+<!-- acoustics-core.js をwindowに展開 -->
+<script type="module">
+import {
+  designButterworthBandpassSOS_N, bandEdges, sosFilter,
+  centersOct, centersThird, fullCenters, preferredLabel,
+  ewmaSquaredToSPL, movingLeqSPL, percentile, downsampleForPlot
+} from "./acoustics-core.js";
+Object.assign(window, {
+  designButterworthBandpassSOS_N, bandEdges, sosFilter,
+  centersOct, centersThird, fullCenters, preferredLabel,
+  ewmaSquaredToSPL, movingLeqSPL, percentile, downsampleForPlot
+});
+window._acousticsCoreReady = true;
+window.dispatchEvent(new Event('acoustics-ready'));
+</script>
+
+<script>
+const P0 = 2e-5;
+
+/* ── utils ── */
+function logln(s){
+  const el = document.getElementById('log');
+  const t  = new Date().toLocaleTimeString();
+  el.textContent += `[${t}] ${s}\n`;
+  el.scrollTop = el.scrollHeight;
+}
+function setStatus(s){ document.getElementById('statusEl').textContent = s; logln(s); }
+function showOverlay(){ document.getElementById('overlay').classList.add('vis'); }
+function hideOverlay(){ document.getElementById('overlay').classList.remove('vis'); }
+
+window.addEventListener('error', e => setStatus('JS error: '+(e.message||e)));
+window.addEventListener('unhandledrejection', e => setStatus('Promise error: '+(e.reason?.message||String(e.reason))));
+
+/* ── global state ── */
+let g = {
+  files:[], audio:null,
+  csv:{rows:[], headerTokens:[], headerLike:false},
+  srCSV:25600, setup:[], results:null
+};
+
+/* ── CSV parse ── */
+function splitCSV(line){
+  const out=[]; let cur=''; let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){inQ=!inQ;continue;}
+    if(!inQ&&(ch===','||ch==='\t')){out.push(cur.trim());cur='';continue;}
+    cur+=ch;
+  }
+  out.push(cur.trim());
+  if(out.length===1&&out[0].includes(' ')) return out[0].split(/\s+/);
+  return out;
+}
+async function parseCSV(file, hasHeader){
+  const rows=[], decoder=new TextDecoder('utf-8');
+  let headerTokens=[], leftover='', firstChunk=true;
+  if(file.stream){
+    const reader=file.stream().getReader();
+    while(true){
+      const{done,value}=await reader.read(); if(done) break;
+      let txt=decoder.decode(value,{stream:true});
+      if(firstChunk){if(txt.startsWith('\uFEFF'))txt=txt.slice(1);firstChunk=false;}
+      txt=leftover+txt;
+      const lines=txt.split(/\r?\n/); leftover=lines.pop();
+      for(const l of lines){
+        const tl=l.trim(); if(!tl) continue;
+        if(hasHeader&&!headerTokens.length){headerTokens=splitCSV(tl);}
+        else rows.push(splitCSV(tl).map(t=>{const v=Number(t.replace(/,/g,''));return isFinite(v)?v:NaN;}));
+      }
+    }
+  } else {
+    const text=await file.text();
+    for(const l of text.replace(/\r/g,'').split('\n')){
+      const tl=l.trim(); if(!tl) continue;
+      if(hasHeader&&!headerTokens.length){headerTokens=splitCSV(tl);}
+      else rows.push(splitCSV(tl).map(t=>{const v=Number(t.replace(/,/g,''));return isFinite(v)?v:NaN;}));
+    }
+  }
+  if(leftover.trim()){
+    if(hasHeader&&!headerTokens.length) headerTokens=splitCSV(leftover.trim());
+    else rows.push(splitCSV(leftover.trim()).map(t=>{const v=Number(t.replace(/,/g,''));return isFinite(v)?v:NaN;}));
+  }
+  return{rows,headerTokens,headerLike:hasHeader};
+}
+
+/* ── WAV decode ── */
+function readWavHeader(buf){
+  const v=new DataView(buf);
+  const str=(o,n)=>String.fromCharCode(...new Uint8Array(buf,o,n));
+  if(str(0,4)!=='RIFF'||str(8,4)!=='WAVE') throw new Error('Not WAVE');
+  let off=12,ch=0,sr=0,ba=0,bps=0,af=0,data=-1,dl=0,cset=null;
+  while(off+8<=v.byteLength){
+    const id=str(off,4),len=v.getUint32(off+4,true); off+=8;
+    if(id==='fmt '){af=v.getUint16(off,true);ch=v.getUint16(off+2,true);sr=v.getUint32(off+4,true);ba=v.getUint16(off+12,true);bps=v.getUint16(off+14,true);
+      if(af===0xFFFE&&len>=26) af=v.getUint16(off+24,true);}   // WAVE_FORMAT_EXTENSIBLE: use the sub-format code
+    else if(id==='data'){data=off;dl=Math.min(len,v.byteLength-off);}
+    else if(id==='CSET'){try{cset=parseCSET(v,off,len);}catch(_){cset=null;}}
+    off+=len+(len&1);   // RIFF chunks are word-aligned
+  }
+  return{audioFormat:af,numChannels:ch,sampleRate:sr,bitsPerSample:bps,blockAlign:ba,dataOffset:data,dataLength:dl,cset};
+}
+/* DA-20 CSET chunk: per-channel name, sensor type, unit and value per bit (same layout as wav_Inspector.html). */
+function parseCSET(dv, off, size){
+  const rd=(o,n)=>{let s='';for(let i=0;i<n;i++){const c=dv.getUint8(o+i);if(c===0)break;s+=String.fromCharCode(c);}return s.trim();};
+  let p=off+12+2+2+8+8+2+2+2+2+40+8+16+16;          // common header up to the firmware versions
+  p+=2+2+2+4+2+4+2+8+8+16+4+2+2+2+24;               // trigger settings, range, reserved
+  const chBlock=114, n=Math.max(0,Math.floor((size-(p-off))/chBlock)), channels=[];
+  for(let i=0;i<n;i++){
+    let q=p+i*chBlock; const c={};
+    c.name=rd(q,40); q+=40; q+=2; c.enabled=!!dv.getInt16(q+2,true); q+=4; q+=2;
+    c.sensorType=dv.getInt16(q+2,true); q+=4; q+=2; q+=4; q+=2; q+=4; q+=2; q+=2;
+    c.unit=rd(q,8); q+=8; c.valuePerBit=dv.getFloat64(q,true);
+    channels.push(c);
+  }
+  return {channels};
+}
+function decodePCM(buf){
+  const h=readWavHeader(buf);
+  const v=new DataView(buf,h.dataOffset,h.dataLength);
+  const frames=Math.floor(h.dataLength/h.blockAlign);
+  const out=Array.from({length:h.numChannels},()=>new Float32Array(frames));
+  let p=0;
+  for(let i=0;i<frames;i++){
+    for(let c=0;c<h.numChannels;c++){
+      let y=0;
+      if(h.audioFormat===1){
+        if(h.bitsPerSample===16){y=v.getInt16(p,true)/32768;p+=2;}
+        else if(h.bitsPerSample===24){const b0=v.getUint8(p),b1=v.getUint8(p+1),b2=v.getUint8(p+2);let x=(b2<<16)|(b1<<8)|b0;if(x&0x800000)x|=0xFF000000;y=x/8388608;p+=3;}
+        else if(h.bitsPerSample===32){y=v.getInt32(p,true)/2147483648;p+=4;}
+        else throw new Error('PCM bits '+h.bitsPerSample);
+      } else if(h.audioFormat===3){
+        if(h.bitsPerSample!==32) throw new Error('float bits '+h.bitsPerSample);
+        y=v.getFloat32(p,true);p+=4;
+      } else throw new Error('fmt '+h.audioFormat);
+      out[c][i]=y;
+    }
+  }
+  return{sampleRate:h.sampleRate,numberOfChannels:h.numChannels,length:frames,bitsPerSample:h.bitsPerSample,audioFormat:h.audioFormat,
+         cset:h.cset,duration:frames/h.sampleRate,getChannelData:i=>out[i]};
+}
+
+/* ── band UI ── */
+function refreshBandUI(){
+  const type=document.getElementById('bandType').value;
+  const lo=document.getElementById('bandLo'), hi=document.getElementById('bandHi');
+  if(!window.fullCenters) return;            // filled in once acoustics-core.js has loaded
+  const list=window.fullCenters(type);
+  lo.innerHTML=hi.innerHTML=list.map(f=>`<option value="${f}">${bandLabel(f)}</option>`).join('');
+  const pick=(nom)=>list.find(f=>window.preferredLabel(f)===nom) ?? list[0];
+  lo.value=pick(31.5); hi.value=pick(8000);
+}
+function bandLabel(f){ return window.preferredLabel ? String(window.preferredLabel(f)) : String(Math.round(f)); }
+
+/* ── channel setup UI ── */
+function csetChannels(nch){
+  const cs=g.audio?.cset?.channels; if(!cs||!cs.length||g.audio.audioFormat!==1) return null;
+  const list=cs.length===nch?cs:cs.filter(c=>c.enabled);
+  return list.length===nch?list:null;
+}
+function ensureSetup(nch, colNames=[], fresh=false){
+  const root=document.getElementById('setupBody');
+  document.getElementById('setupCard').style.display='block';
+  const cal=csetChannels(nch);
+  if(fresh||g.setup.length!==nch){
+    g.setup=[];
+    for(let i=0;i<nch;i++){
+      const cn=(colNames[i]||'').toLowerCase();
+      let role='Microphone', gain=1.0, unit='';
+      if(cn.includes('fh')||cn.includes('force')) role='Force hammer';
+      else if(cn.includes('acc')) role='Accelerometer';
+      const c=cal?.[i];
+      if(c && Number.isFinite(c.valuePerBit) && c.valuePerBit>0){
+        // decodePCM scales integers by 1/2^(bits-1); multiply back and apply the unit per bit.
+        gain=c.valuePerBit*Math.pow(2,g.audio.bitsPerSample-1); unit=c.unit;
+        if(c.sensorType===3) role='Accelerometer';
+      }
+      g.setup.push({use:i===0,role,gain,unit});
+    }
+  }
+  let html=(cal?`<div class="hint" style="margin-bottom:6px">DA-20 の校正値（CSET の value/bit）からゲインを入れました。単位：${cal.map(c=>c.unit||'—').join(' / ')}</div>`:'')+
+    '<table class="setup-table"><thead><tr><th>Use</th><th>CH</th><th>Role</th><th>Gain ×</th></tr></thead><tbody>';
+  for(let i=0;i<nch;i++){
+    const st=g.setup[i];
+    html+=`<tr>
+      <td style="text-align:center"><input type="checkbox" data-k="${i}" class="ck-use" ${st.use?'checked':''}></td>
+      <td style="font-family:var(--mono);font-size:.62rem;color:var(--accent2)">CH${i+1}</td>
+      <td><select data-k="${i}" class="sel-role">${['Force hammer','Accelerometer','Microphone'].map(r=>`<option value="${r}" ${st.role===r?'selected':''}>${r}</option>`).join('')}</select></td>
+      <td><input type="number" step="any" value="${st.gain}" data-k="${i}" class="num-gain"></td>
+    </tr>`;
+  }
+  html+='</tbody></table>';
+  root.innerHTML=html;
+  root.querySelectorAll('.ck-use').forEach(el=>el.addEventListener('change',ev=>{g.setup[+ev.target.dataset.k].use=ev.target.checked;buildTabs(nch,colNames);}));
+  root.querySelectorAll('.sel-role').forEach(el=>el.addEventListener('change',ev=>{g.setup[+ev.target.dataset.k].role=ev.target.value;}));
+  root.querySelectorAll('.num-gain').forEach(el=>el.addEventListener('input',ev=>{const v=parseFloat(ev.target.value);g.setup[+ev.target.dataset.k].gain=isFinite(v)?v:1.0;}));
+}
+
+/* ── tabs ── */
+function buildTabs(nch, colNames=[]){
+  const tabsEl=document.getElementById('tabs');
+  tabsEl.innerHTML=''; tabsEl.style.display='flex';
+  for(let ch=0;ch<nch;ch++){
+    if(!g.setup[ch]?.use) continue;
+    const d=document.createElement('div'); d.className='tab';
+    if(!tabsEl.children.length) d.classList.add('active');
+    const cn=colNames[ch]?colNames[ch].trim():('CH'+(ch+1));
+    d.textContent=`${cn} (${g.setup[ch].role})`;
+    d.dataset.ch=ch;
+    d.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      d.classList.add('active'); renderChannel(ch);
+    });
+    tabsEl.appendChild(d);
+  }
+  const first=tabsEl.querySelector('.tab');
+  if(first) renderChannel(+first.dataset.ch);
+  else { document.getElementById('tableWrap').innerHTML=''; document.getElementById('plotsWrap').innerHTML=''; }
+}
+
+/* ── file input ── */
+const fileZone=document.getElementById('fileZone');
+const fileInput=document.getElementById('fileInput');
+const loadBtn=document.getElementById('loadBtn');
+
+fileInput.addEventListener('change',e=>{
+  const files=Array.from(e.target.files||[]); if(!files.length) return;
+  g.files=files;
+  document.getElementById('fileName').textContent=files.map(f=>f.name).join(', ');
+  loadBtn.disabled=false;
+});
+['dragover','dragenter'].forEach(ev=>fileZone.addEventListener(ev,e=>{e.preventDefault();fileZone.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>fileZone.addEventListener(ev,e=>{e.preventDefault();fileZone.classList.remove('drag');
+  if(ev==='drop'&&e.dataTransfer?.files?.length){
+    g.files=Array.from(e.dataTransfer.files);
+    document.getElementById('fileName').textContent=g.files.map(f=>f.name).join(', ');
+    loadBtn.disabled=false;
+  }
+}));
+
+/* ── load ── */
+loadBtn.addEventListener('click', async()=>{
+  if(!g.files.length){return;}
+  const f=g.files[0];
+  const ext=f.name.toLowerCase().split('.').pop();
+  setStatus('Loading '+f.name+' …');
+  document.getElementById('configCard').style.display='none';
+  document.getElementById('processBtn').disabled=true;
+
+  if(ext==='csv'||ext==='txt'){
+    try{
+      const hasHeader=document.getElementById('hasHeader').checked;
+      g.csv=await parseCSV(f,hasHeader); g.audio=null;
+      // auto-detect SR from timestamps
+      if(g.csv.rows.length>4){
+        const t=g.csv.rows.map(r=>r[0]).filter(v=>isFinite(v));
+        if(t.length>4){
+          const dt=[]; for(let i=1;i<t.length;i++){const d=t[i]-t[i-1];if(isFinite(d)&&d>0)dt.push(d);}
+          if(dt.length){const s=Float64Array.from(dt).sort();const m=s[Math.floor(s.length/2)];if(m>0){g.srCSV=1/m;document.getElementById('csvSr').value=Math.round(g.srCSV);}}
+        }
+      }
+      const nch=g.csv.headerLike?Math.max(0,g.csv.headerTokens.length-1):(g.csv.rows[0]?.length-1||0);
+      const cols=g.csv.headerLike?g.csv.headerTokens.slice(1):[];
+      ensureSetup(nch,cols); buildTabs(nch,cols); refreshBandUI();
+      document.getElementById('configCard').style.display='block';
+      document.getElementById('processBtn').disabled=false;
+      setStatus(`CSV: ${g.csv.rows.length} rows · ${nch} ch · SR≈${Math.round(g.srCSV)} Hz`);
+    }catch(e){setStatus('CSV error: '+(e.message||e));}
+  } else {
+    const fr=new FileReader();
+    fr.onload=()=>{
+      try{
+        g.audio=decodePCM(fr.result); g.csv={rows:[],headerTokens:[],headerLike:false};
+        document.getElementById('csvSr').value=g.audio.sampleRate;
+        ensureSetup(g.audio.numberOfChannels,[],true); buildTabs(g.audio.numberOfChannels,[]); refreshBandUI();
+        document.getElementById('configCard').style.display='block';
+        document.getElementById('processBtn').disabled=false;
+        setStatus(`WAV: ${g.audio.numberOfChannels} ch · ${g.audio.sampleRate} Hz · ${g.audio.length} frames`);
+      }catch(e){setStatus('WAV error: '+(e.message||e));}
+    };
+    fr.readAsArrayBuffer(f);
+  }
+});
+
+/* ── process ── */
+document.getElementById('processBtn').addEventListener('click', async()=>{
+  const btn=document.getElementById('processBtn');
+  try{
+    btn.classList.add('processing'); btn.textContent='処理中…'; btn.disabled=true;
+    showOverlay();
+    document.getElementById('tableWrap').innerHTML='';
+    document.getElementById('plotsWrap').innerHTML='';
+    setStatus('Processing…');
+    await new Promise(r=>setTimeout(r,20));
+
+    const bandType=document.getElementById('bandType').value;
+    if(!window.fullCenters) throw new Error('acoustics-core.js の読み込みを待っています。少し待ってから再実行してください。');
+    const bw=bandType==='oct'?1:3;
+    const centersAll=window.fullCenters(bandType);
+    const lo=Number(document.getElementById('bandLo').value)||centersAll[0];
+    const hi=Number(document.getElementById('bandHi').value)||centersAll[centersAll.length-1];
+    const timeMode=document.getElementById('timeWeight').value;
+    const leqWin=Math.max(1e-3,Number(document.getElementById('leqWin').value)||1);
+    const N=36;
+
+    let sr, nch, getData;
+    if(g.audio){
+      sr=g.audio.sampleRate; nch=g.audio.numberOfChannels; getData=i=>g.audio.getChannelData(i);
+    } else {
+      sr=Number(document.getElementById('csvSr').value)||g.srCSV||25600;
+      nch=g.setup.length;
+      getData=i=>{
+        const ci=i+1;
+        const arr=new Float32Array(g.csv.rows.length);
+        for(let r=0;r<g.csv.rows.length;r++){const v=Number(g.csv.rows[r][ci]);arr[r]=isFinite(v)?v:0;}
+        return arr;
+      };
+    }
+
+    const inRange=centersAll.filter(f=>f>=lo-1e-6&&f<=hi+1e-6);
+    const centers=inRange.filter(f=>window.bandEdges(f,bw)[1]<0.45*sr);
+    if(centers.length<inRange.length) logln(`Fs=${sr} Hz のため ${inRange.length-centers.length} 帯域（上端がナイキスト付近）を除外`);
+    const usedIdx=g.setup.map((s,i)=>s.use?i:-1).filter(i=>i>=0);
+    const results=[];
+
+    for(const ch of usedIdx){
+      const cfg=g.setup[ch];
+      let x=getData(ch);
+      if(!x||!x.length){setStatus(`CH${ch+1}: データなし`);continue;}
+      if(cfg.gain!==1){const xx=new Float32Array(x.length);for(let i=0;i<x.length;i++)xx[i]=x[i]*cfg.gain;x=xx;}
+      const byBand={};
+      for(const fc of centers){
+        const sos=window.designButterworthBandpassSOS_N(fc,sr,N,bw);
+        const y=window.sosFilter(x,sos);
+        const T=y.length/sr;
+        let mean_p2=0; for(let k=0;k<y.length;k++) mean_p2+=y[k]*y[k]; mean_p2/=Math.max(1,y.length);
+        const Leq=10*Math.log10(Math.max(1e-24,mean_p2/(P0*P0)));
+        const LE =Leq+10*Math.log10(Math.max(1e-24,T));
+        const sFast=window.ewmaSquaredToSPL?window.ewmaSquaredToSPL(y,sr,0.125):y.map(v=>20*Math.log10(Math.max(1e-12,Math.abs(v))/P0));
+        const sSlow=window.ewmaSquaredToSPL?window.ewmaSquaredToSPL(y,sr,1.0):sFast;
+        const sLeq =window.movingLeqSPL?window.movingLeqSPL(y,sr,leqWin):sFast;
+        let series;
+        if(timeMode==='fast'||timeMode==='none') series=sFast;
+        else if(timeMode==='slow') series=sSlow;
+        else if(timeMode==='leq') series=sLeq;
+        else { let mx=-1e9; series=new Float32Array(sFast.length); for(let k=0;k<sFast.length;k++){mx=Math.max(mx,sFast[k]);series[k]=mx;} }
+        let Lfmax=-1e9; for(const v of sFast) if(v>Lfmax) Lfmax=v;
+        let Lsmax=-1e9; for(const v of sSlow) if(v>Lsmax) Lsmax=v;
+        const pct=window.percentile?window.percentile.bind(window):((arr,p)=>{const a=Float64Array.from(arr).sort();const pos=(a.length-1)*p;const lo=Math.floor(pos),hi=Math.ceil(pos),w=pos-lo;return(1-w)*a[lo]+w*a[hi];});
+        byBand[fc]={y,sFast,sr,Leq,LE,Lfmax,Lsmax,L05:pct(series,.95),L10:pct(series,.90),L50:pct(series,.50),L90:pct(series,.10),L95:pct(series,.05)};
+      }
+      results.push({channelIndex:ch,role:cfg.role,byBand,centers,sr});
+    }
+    g.results={results,centers,sr};
+    setStatus('Done');
+    const active=document.querySelector('#tabs .tab.active');
+    if(active) renderChannel(+active.dataset.ch);
+  }catch(e){
+    setStatus('Process error: '+(e.message||e));
+  }finally{
+    hideOverlay();
+    btn.classList.remove('processing'); btn.textContent='Process'; btn.disabled=false;
+  }
+});
+
+/* ── render channel ── */
+function renderChannel(ch){
+  if(!g.results){return;}
+  const rec=g.results.results.find(r=>r.channelIndex===ch);
+  if(!rec){document.getElementById('tableWrap').innerHTML='';document.getElementById('plotsWrap').innerHTML='';return;}
+  const isCSV=!g.audio&&g.csv.headerLike;
+  const chName=(isCSV&&g.csv.headerTokens[ch+1])?g.csv.headerTokens[ch+1].trim():('CH'+(ch+1));
+  document.getElementById('summaryTitle').textContent=`CH: ${chName} (${rec.role}) — ${document.getElementById('bandType').value==='oct'?'1/1':'1/3'} octave`;
+
+  const centers=rec.centers;
+  const metrics=[
+    {key:'Lfmax',label:'Lfmax [dB]'},
+    {key:'Lsmax',label:'Lsmax [dB]'},
+    {key:'Leq',  label:'Leq [dB]'},
+    {key:'LE',   label:'LE [dB]'},
+    {key:'L05',  label:'L05'},
+    {key:'L10',  label:'L10'},
+    {key:'L50',  label:'L50'},
+    {key:'L90',  label:'L90'},
+    {key:'L95',  label:'L95'},
+  ];
+
+  let html='<table><thead><tr><th>Metric</th>';
+  for(const f of centers) html+=`<th class="fc-head" data-f="${f}">${bandLabel(f)}</th>`;
+  html+='</tr></thead><tbody>';
+  for(const m of metrics){
+    html+=`<tr><td>${m.label}</td>`;
+    for(const f of centers){
+      const s=rec.byBand[f];
+      const v=s?s[m.key]:null;
+      html+=`<td>${(typeof v==='number')?v.toFixed(1):''}</td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</tbody></table>';
+  const wrap=document.getElementById('tableWrap');
+  wrap.innerHTML=html;
+  wrap.querySelectorAll('th.fc-head').forEach(th=>{
+    th.title='クリックで該当バンドへスクロール';
+    th.addEventListener('click',()=>{
+      const target=document.getElementById(`band-${Math.round(Number(th.dataset.f))}`);
+      if(target) target.scrollIntoView({behavior:'smooth',block:'center'});
+    });
+  });
+
+  const host=document.getElementById('plotsWrap'); host.innerHTML='';
+  for(const f of centers){
+    const m=rec.byBand[f]; if(!m) continue;
+    const div=document.createElement('div'); div.className='band-plot'; div.id=`band-${Math.round(f)}`; host.appendChild(div);
+    const sr=m.sr;
+    const xArr=Array.from({length:m.y.length},(_,i)=>i/sr);
+    const ds1=window.downsampleForPlot?window.downsampleForPlot(xArr,m.y,2000):{x:xArr,y:Array.from(m.y)};
+    const ds2=window.downsampleForPlot?window.downsampleForPlot(xArr,m.sFast,2000):{x:xArr,y:Array.from(m.sFast)};
+    let kmax=0; for(let k=1;k<m.sFast.length;k++) if(m.sFast[k]>m.sFast[kmax]) kmax=k;
+    const tmax=kmax/sr;
+    Plotly.react(div,[
+      {x:ds1.x,y:ds1.y,name:'BP signal',mode:'lines',line:{width:1,color:'rgba(96,165,250,.6)'}},
+      {x:ds2.x,y:ds2.y,name:'Lfmax (Fast)',mode:'lines',line:{width:1.5,color:'rgba(52,211,153,.8)'},yaxis:'y2'},
+      {x:[tmax],y:[m.Lfmax],name:'Lfmax',mode:'markers',marker:{symbol:'diamond',size:9,color:'#fbbf24',line:{width:1,color:'#fff'}},yaxis:'y2'}
+    ],{
+      paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(22,28,42,.9)',
+      font:{family:"'Space Mono',monospace",size:10,color:'#4e5f7a'},
+      title:{text:`${bandLabel(f)} Hz`,font:{size:11,color:'#7eb8ff'},x:0.02,xanchor:'left'},
+      margin:{l:50,r:50,t:28,b:30},
+      xaxis:{title:'t [s]',color:'#4e5f7a',gridcolor:'rgba(180,200,255,.06)',linecolor:'rgba(180,200,255,.15)'},
+      yaxis:{title:'Pa',color:'#4e5f7a',gridcolor:'rgba(180,200,255,.06)',linecolor:'rgba(180,200,255,.15)'},
+      yaxis2:{title:'dB',overlaying:'y',side:'right',color:'#4e5f7a',gridcolor:'rgba(180,200,255,.04)'},
+      legend:{orientation:'h',y:-0.15,bgcolor:'rgba(0,0,0,0)',font:{size:9}},
+      annotations:[{x:tmax,y:m.Lfmax,text:`${m.Lfmax.toFixed(1)} dB`,yref:'y2',showarrow:false,yshift:10,font:{size:9,color:'#fbbf24'}}]
+    });
+  }
+}
+
+document.getElementById('bandType').addEventListener('change', refreshBandUI);
+if(window._acousticsCoreReady) refreshBandUI(); else window.addEventListener('acoustics-ready', refreshBandUI, {once:true});
+</script>
+</body>
+</html>

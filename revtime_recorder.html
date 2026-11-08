@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RT Estimator — Clap Method</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Space+Mono:wght@400;700&family=Noto+Serif+JP:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d12; --bg2:#10141e; --bg3:#161c2a;
+  --border:rgba(180,200,255,0.07); --border2:rgba(100,160,255,0.22);
+  --text:#c0cee6; --dim:#4e5f7a; --bright:#e8f0ff;
+  --accent:#4a8fff; --accent2:#7eb8ff;
+  --ok:#34d399; --ok-bg:rgba(52,211,153,0.08);
+  --ng:#f87171; --ng-bg:rgba(248,113,113,0.08);
+  --warn:#fbbf24;
+  --mono:'Space Mono',monospace;
+  --serif:'EB Garamond',Georgia,serif;
+  --jp:'Noto Serif JP',serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--jp);font-size:15px;line-height:1.7;min-height:100vh}
+
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(11,13,18,0.94);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.nav-inner{
+  max-width:1100px;margin:0 auto;padding:14px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.nav-brand{display:flex;flex-direction:column;gap:2px}
+.nav-title{font-family:var(--serif);font-size:1.15rem;font-weight:500;color:var(--bright)}
+.nav-sub{font-family:var(--mono);font-size:0.58rem;letter-spacing:0.12em;color:var(--dim);text-transform:uppercase}
+.nav-actions{display:flex;gap:8px}
+.btn-lang{
+  font-family:var(--mono);font-size:0.62rem;letter-spacing:.12em;
+  background:transparent;border:1px solid var(--border2);color:var(--dim);
+  padding:5px 10px;border-radius:3px;cursor:pointer;transition:all .2s;
+}
+.btn-lang:hover,.btn-lang.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+main{max-width:1100px;margin:0 auto;padding:24px 24px 60px}
+.grid{display:grid;gap:14px}
+
+.card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:4px;
+  padding:22px;position:relative;overflow:hidden;
+  animation:fadeUp .5s ease both;
+}
+.card:nth-child(1){animation-delay:.05s}.card:nth-child(2){animation-delay:.1s}
+.card:nth-child(3){animation-delay:.15s}.card:nth-child(4){animation-delay:.2s}
+.card:nth-child(5){animation-delay:.25s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),transparent);opacity:.45;
+}
+.card-title{
+  font-family:var(--mono);font-size:0.62rem;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:12px;
+}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border2)}
+
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:12px}
+.ctrl-g{display:flex;flex-direction:column;gap:4px}
+.ctrl-lbl{font-family:var(--mono);font-size:0.58rem;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+
+button{
+  font-family:var(--mono);font-size:0.68rem;letter-spacing:.05em;
+  padding:8px 15px;border:1px solid var(--border2);border-radius:3px;
+  background:transparent;color:var(--accent2);cursor:pointer;transition:all .18s;white-space:nowrap;
+}
+button:hover:not(:disabled){background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.3;cursor:not-allowed}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#3a7fee}
+button.recording{
+  background:var(--ng);border-color:var(--ng);color:#fff;
+  animation:prec 1.1s ease-in-out infinite;
+}
+@keyframes prec{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.45)}55%{box-shadow:0 0 0 7px rgba(248,113,113,0)}}
+
+select,input[type="number"]{
+  font-family:var(--mono);font-size:0.68rem;
+  background:var(--bg3);color:var(--text);
+  border:1px solid var(--border2);border-radius:3px;
+  padding:7px 10px;transition:border-color .18s;
+}
+select:focus,input:focus{outline:none;border-color:var(--accent)}
+
+.check-row{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;color:var(--text)}
+input[type="checkbox"]{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
+
+.pill{
+  font-family:var(--mono);font-size:0.6rem;letter-spacing:.1em;
+  padding:4px 10px;border-radius:2px;
+  background:var(--bg3);border:1px solid var(--border2);color:var(--dim);display:inline-block;
+}
+.pill.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.pill.ng{background:var(--ng-bg);border-color:var(--ng);color:var(--ng)}
+.pill.active{border-color:var(--warn);color:var(--warn)}
+
+.hint{
+  font-size:0.8rem;color:var(--dim);line-height:1.85;
+  border-left:2px solid var(--border2);padding-left:12px;margin-top:10px;
+}
+.hint b{color:var(--text)}
+
+audio{width:100%;margin-top:10px;display:none;filter:invert(1) hue-rotate(180deg) brightness(.9)}
+
+.file-lbl{
+  font-family:var(--mono);font-size:0.65rem;letter-spacing:.08em;
+  padding:7px 14px;border:1px dashed var(--border2);border-radius:3px;
+  color:var(--dim);cursor:pointer;transition:all .2s;display:inline-block;
+}
+.file-lbl:hover{border-color:var(--accent);color:var(--accent)}
+input[type="file"]{display:none}
+
+.save-row{display:flex;align-items:center;gap:10px;margin-top:10px;font-family:var(--mono);font-size:0.65rem;color:var(--dim)}
+.save-dots{display:flex;gap:5px}
+.dot{width:9px;height:9px;border-radius:50%;border:1px solid var(--border2);transition:all .3s}
+.dot.filled{background:var(--ok);border-color:var(--ok)}
+
+.overall-row{
+  display:flex;align-items:center;gap:14px;padding:12px 0;
+  border-top:1px solid var(--border);margin-top:12px;
+}
+.overall-lbl{font-family:var(--mono);font-size:0.62rem;letter-spacing:.15em;color:var(--dim)}
+.overall-val{font-family:var(--mono);font-size:1.05rem;font-weight:700}
+.overall-val.ok{color:var(--ok)}.overall-val.ng{color:var(--ng)}
+.overall-note{font-family:var(--mono);font-size:0.62rem;color:var(--dim)}
+
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:0.8rem}
+thead tr{border-bottom:1px solid var(--border2)}
+th{
+  font-family:var(--mono);font-size:0.58rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--dim);padding:8px 11px;text-align:right;white-space:nowrap;
+}
+th:first-child{text-align:left}
+td{
+  padding:9px 11px;text-align:right;border-bottom:1px solid var(--border);
+  font-variant-numeric:tabular-nums;color:var(--text);
+}
+td:first-child{text-align:left;font-family:var(--mono);font-size:0.73rem;color:var(--accent2)}
+tr:hover td{background:var(--bg3)}
+.j-ok{color:var(--ok);font-weight:700}.j-ng{color:var(--ng)}.j-na{color:var(--dim)}
+.wm{color:var(--warn);font-size:.6rem;vertical-align:super;margin-left:1px}
+
+.note-footer{
+  margin-top:10px;font-size:0.73rem;color:var(--dim);
+  border-top:1px solid var(--border);padding-top:8px;line-height:1.9;
+}
+.note-footer b{color:var(--warn)}
+
+.decay-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}
+.manual-panel{
+  background:var(--bg3);border:1px solid var(--border2);border-radius:3px;
+  padding:14px;margin-top:10px;display:none;
+}
+.manual-panel.vis{display:block}
+.manual-inner{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.manual-res{font-family:var(--mono);font-size:0.72rem;color:var(--ok);margin-left:4px}
+.manual-head{font-family:var(--mono);font-size:0.6rem;letter-spacing:.12em;color:var(--accent);margin-bottom:10px}
+
+#wave{width:100%;height:130px;display:block;border-radius:3px;background:var(--bg3)}
+.wave-legend{display:flex;gap:16px;margin-top:8px;font-size:0.7rem;color:var(--dim)}
+.leg-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+
+@media(max-width:640px){
+  main{padding:14px 12px 48px}
+  th,td{padding:7px 8px;font-size:.72rem}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="nav-title">手をたたいて残響時間を推定</div>
+      <div class="nav-sub">RT Estimator &middot; Clap Method &middot; Building Acoustics</div>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-lang active" id="btnJP">JP</button>
+      <button class="btn-lang" id="btnEN">EN</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+<div class="grid">
+
+<!-- 1) 測定 -->
+<section class="card">
+  <div class="card-title" data-i18n="sec1">1 · 測定と入力</div>
+  <div class="controls">
+    <div class="ctrl-g">
+      <div class="ctrl-lbl" data-i18n="recLenL">録音長 [秒]</div>
+      <input type="number" id="recSec" value="5" min="2" max="30" step="1" style="width:68px">
+    </div>
+    <div class="ctrl-g">
+      <div class="ctrl-lbl" data-i18n="measCountL">測定点数</div>
+      <select id="measCount" style="width:58px">
+        <option value="1" selected>1</option>
+        <option value="3">3</option>
+        <option value="5">5</option>
+      </select>
+    </div>
+    <button class="primary" id="btnRecord" data-i18n="recStart">録音開始</button>
+    <button id="btnStop" disabled data-i18n="stop">停止</button>
+    <button id="btnCommit" disabled data-i18n="saveThis">この測定を保存</button>
+    <button id="btnAvg" disabled data-i18n="avg">平均を計算</button>
+    <label class="file-lbl" for="fileInput" data-i18n="fileLabel">ファイルを読込</label>
+    <input type="file" id="fileInput" accept=".wav,.mp3,.m4a,.aac,.webm,audio/*">
+    <span id="stateEl" class="pill">idle</span>
+  </div>
+  <audio id="player" controls playsinline></audio>
+  <p class="hint" data-i18n="hint1">
+    静かな部屋で、<b>ボタンを押して約1秒後に1回だけ強く手を叩いてください</b>。端末側のNR/AGCは無効化要求を出しますが、OS依存で完全には止まりません。
+  </p>
+  <p class="hint" style="font-size:.72rem;margin-top:5px" data-i18n="constraint">
+    echoCancellation=false &middot; noiseSuppression=false &middot; autoGainControl=false（適用可否は端末次第）
+  </p>
+  <div class="save-row">
+    <span data-i18n="savedCount">保存済み:</span>
+    <span id="savedNum" style="color:var(--text)">0</span>/<span id="targetNum">1</span>
+    <div class="save-dots" id="saveDots"></div>
+  </div>
+</section>
+
+<!-- 2) 解析設定 -->
+<section class="card">
+  <div class="card-title" data-i18n="sec2">2 · 解析・判定設定</div>
+  <div class="controls">
+    <div class="ctrl-g">
+      <div class="ctrl-lbl" data-i18n="bandL">帯域種別</div>
+      <select id="bandType">
+        <option value="ob" selected>1/1 Octave（63 Hz – 4 kHz）</option>
+        <option value="tb">1/3 Octave（50 Hz – 4 kHz）</option>
+      </select>
+    </div>
+    <button class="primary" id="btnAnalyze" disabled data-i18n="analyze">解析する</button>
+    <button id="btnDownloadCsv" disabled data-i18n="saveCsv">CSV保存</button>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:10px">
+    <label class="check-row"><input type="checkbox" id="snrInclude63" checked><span data-i18n="include63">判定に63 Hzを含める</span></label>
+    <label class="check-row"><input type="checkbox" id="noiseComp" checked><span data-i18n="bgsub">ノイズ補償（Lundeby 法で積分の終点を決め、残りを指数減衰で補う）</span></label>
+    <label class="check-row"><input type="checkbox" id="manualRegress"><span data-i18n="manualChk">手動回帰区間モード</span></label>
+  </div>
+  <p class="hint" data-i18n="snrRule">
+    SNR = <b>手拍子直後200 ms</b>の平均パワー ÷ <b>手拍子前0.5 s</b>の平均パワー（10log₁₀）。中央値SNR ≥ 20 dB → <b>OK</b>。
+  </p>
+  <div class="overall-row">
+    <span class="overall-lbl" data-i18n="overall">OVERALL</span>
+    <span id="overallJudge" class="overall-val ng">—</span>
+    <span id="overallNote" class="overall-note"></span>
+  </div>
+</section>
+
+<!-- 3) 結果テーブル -->
+<section class="card">
+  <div class="card-title" data-i18n="sec3">3 · 結果（帯域別）</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-i18n="fc">fc [Hz]</th>
+          <th>EDT [s]</th><th>T10 [s]</th><th>T20 [s]</th><th>T30 [s]</th>
+          <th data-i18n="r2rep">R²</th>
+          <th>SNR [dB]</th>
+          <th>DR [dB]</th>
+          <th data-i18n="judgeH">判定</th>
+        </tr>
+      </thead>
+      <tbody id="resultBody"></tbody>
+    </table>
+  </div>
+  <div class="note-footer" data-i18n="tableNote">
+    判定に使用した回帰＝T30優先→T20→T10→EDT。
+    <b>!!</b>: 信頼性警告（Tの相対差が大きい・10s以上）。
+    <b>※</b>: ショートRT不一致警告（全て1.0s以下かつ最大差0.3s以上）。
+  </div>
+</section>
+
+<!-- 4) 減衰曲線 -->
+<section class="card">
+  <div class="card-title" data-i18n="sec4">4 · 減衰曲線（Schroeder積分）</div>
+  <div class="decay-bar">
+    <div class="ctrl-g">
+      <div class="ctrl-lbl" data-i18n="showBand">表示帯域</div>
+      <select id="detailBand"></select>
+    </div>
+    <div class="ctrl-g">
+      <div class="ctrl-lbl" data-i18n="zoomStartL">開始 [s]</div>
+      <input type="number" id="zoomStart" value="0" step="0.05" min="0" style="width:80px">
+    </div>
+    <div class="ctrl-g">
+      <div class="ctrl-lbl" data-i18n="zoomEndL">終了 [s]</div>
+      <input type="number" id="zoomEnd" value="1.5" step="0.05" min="0.1" style="width:80px">
+    </div>
+    <button id="applyZoom" data-i18n="applyZoom">ズーム適用</button>
+  </div>
+  <div class="manual-panel" id="manualPanel">
+    <div class="manual-head">MANUAL T20 REGRESSION</div>
+    <div class="manual-inner">
+      <div class="ctrl-g">
+        <div class="ctrl-lbl" data-i18n="t20Start">開始 [s] (≈−5 dB)</div>
+        <input type="number" id="manualT20Start" step="0.01" style="width:90px" placeholder="0.000">
+      </div>
+      <div class="ctrl-g">
+        <div class="ctrl-lbl" data-i18n="t20End">終了 [s] (≈−25 dB)</div>
+        <input type="number" id="manualT20End" step="0.01" style="width:90px" placeholder="0.500">
+      </div>
+      <button id="btnManualT20Regress" data-i18n="calcT20">T20を計算</button>
+      <span id="manualT20Result" class="manual-res">—</span>
+    </div>
+    <p class="hint" style="margin-top:8px" data-i18n="dragHint">グラフ上をドラッグ（選択）すると開始・終了時間が自動入力されます。</p>
+  </div>
+  <div id="decayPlot" style="width:100%;height:400px;margin-top:8px"></div>
+  <p class="hint" style="margin-top:8px" data-i18n="decayNote">曲線 = Schroeder（相対dB）。着色帯 = 回帰区間。EDT 実線、T10 破線、T20 一点鎖、T30 点線。</p>
+</section>
+
+<!-- 5) 元波形 -->
+<section class="card">
+  <div class="card-title" data-i18n="sec5">5 · 元信号の波形</div>
+  <canvas id="wave"></canvas>
+  <div class="wave-legend">
+    <span><span class="leg-dot" style="background:#f87171"></span><span data-i18n="lgClap">手拍子検出点</span></span>
+    <span><span class="leg-dot" style="background:#60a5fa"></span><span data-i18n="lgBg">事前暗騒音窓</span></span>
+    <span><span class="leg-dot" style="background:#34d399"></span><span data-i18n="lgPost">直後200ms窓</span></span>
+  </div>
+  <p class="hint" style="margin-top:8px" data-i18n="waveNote">
+    解析に用いた切り出し範囲の元の波形。赤 = 手拍子検出点、青帯 = 事前暗騒音窓、緑帯 = 直後200ms窓。
+  </p>
+</section>
+
+</div>
+</main>
+
+<!-- acoustics-core.js をグローバルに展開 (FilterDesign.html と同パターン) -->
+<script type="module">
+import {
+  designButterworthBandpassSOS_N, sosFilter
+} from "./acoustics-core.js";
+Object.assign(window, { designButterworthBandpassSOS_N, sosFilter });
+// モジュール読み込み完了後にアプリを初期化
+window._acousticsCoreReady = true;
+window.dispatchEvent(new Event('acoustics-ready'));
+</script>
+
+<script>
+/* ============================================================
+   APP  — acoustics-core.js の window.designButterworthBandpassSOS_N
+          と window.sosFilter に依存。モジュール読み込み後に起動。
+   ============================================================ */
+
+function startApp() {
+
+/* ── i18n ── */
+const LANG = {
+  jp:{
+    sec1:"1 · 測定と入力", sec2:"2 · 解析・判定設定", sec3:"3 · 結果（帯域別）",
+    sec4:"4 · 減衰曲線（Schroeder積分）", sec5:"5 · 元信号の波形",
+    recStart:"録音開始", stop:"停止", recLenL:"録音長 [秒]", measCountL:"測定点数",
+    saveThis:"この測定を保存", avg:"平均を計算", fileLabel:"ファイルを読込",
+    savedCount:"保存済み:",
+    hint1:"静かな部屋で、<b>ボタンを押して約1秒後に1回だけ強く手を叩いてください</b>。端末側のNR/AGCは無効化要求を出しますが、OS依存で完全には止まりません。",
+    constraint:"echoCancellation=false · noiseSuppression=false · autoGainControl=false（適用可否は端末次第）",
+    bandL:"帯域種別", analyze:"解析する", saveCsv:"CSV保存",
+    include63:"判定に63 Hzを含める",
+    bgsub:"ノイズ補償（Lundeby 法で積分の終点を決め、残りを指数減衰で補う）",
+    manualChk:"手動回帰区間モード",
+    snrRule:"DR = 帯域ごとの<b>ピーク（10 ms 平均）</b>と<b>暗騒音レベル</b>（Lundeby 法で推定）の差。T30 は DR ≥ 45 dB、T20 は ≥ 35 dB、T10 は ≥ 25 dB のときだけ表示します（ISO 3382-2:2008）。DR ≥ 35 dB → <b>OK</b>。SNR（直後200 ms ÷ 直前0.5 s）は参考値。",
+    overall:"全体判定",
+    fc:"中心周波数 [Hz]", r2rep:"R²", judgeH:"判定",
+    tableNote:"代表値＝減衰レンジが足りる範囲で T30→T20→T10→EDT。<b>!!</b>: 信頼性警告。<b>※</b>: ショートRT不一致警告（全て1.0s以下かつ最大差0.3s以上）。<b>BT</b>: 帯域幅×残響時間 &lt; 16（フィルタの残響で長めに出るおそれ）。",
+    showBand:"表示帯域", zoomStartL:"開始 [s]", zoomEndL:"終了 [s]", applyZoom:"ズーム適用",
+    t20Start:"開始 [s] (≈−5 dB)", t20End:"終了 [s] (≈−25 dB)", calcT20:"T20を計算",
+    dragHint:"グラフ上をドラッグ（選択）すると開始・終了時間が自動入力されます。",
+    decayNote:"曲線 = Schroeder（相対dB）。着色帯 = 回帰区間。EDT 実線、T10 破線、T20 一点鎖、T30 点線。",
+    waveNote:"解析に用いた切り出し範囲の元の波形。赤 = 手拍子検出点、青帯 = 事前暗騒音窓、緑帯 = 直後200ms窓。",
+    lgClap:"手拍子検出点", lgBg:"事前暗騒音窓", lgPost:"直後200ms窓"
+  },
+  en:{
+    sec1:"1 · Recording & Input", sec2:"2 · Analysis Settings", sec3:"3 · Results by Band",
+    sec4:"4 · Decay Curves (Schroeder)", sec5:"5 · Original Waveform",
+    recStart:"Record", stop:"Stop", recLenL:"Duration [s]", measCountL:"Measurements",
+    saveThis:"Save this take", avg:"Average saved", fileLabel:"Load file",
+    savedCount:"Saved:",
+    hint1:"In a quiet room, <b>press the button and clap once strongly about 1 s later</b>. NR/AGC disable is requested but may persist depending on OS.",
+    constraint:"echoCancellation=false · noiseSuppression=false · autoGainControl=false (device-dependent)",
+    bandL:"Band type", analyze:"Analyze", saveCsv:"Save CSV",
+    include63:"Include 63 Hz in judgment",
+    bgsub:"Noise compensation (Lundeby truncation + exponential tail)",
+    manualChk:"Manual regression window mode",
+    snrRule:"DR = band <b>peak (10 ms average)</b> minus <b>noise level</b> (Lundeby). T30 shown only if DR ≥ 45 dB, T20 ≥ 35 dB, T10 ≥ 25 dB (ISO 3382-2:2008). DR ≥ 35 dB → <b>OK</b>. SNR (200 ms after / 0.5 s before) is for reference.",
+    overall:"Overall",
+    fc:"Center freq [Hz]", r2rep:"R²", judgeH:"Judge",
+    tableNote:"Representative: T30 > T20 > T10 > EDT within the available decay range. <b>!!</b>: reliability warning. <b>※</b>: short-RT inconsistency. <b>BT</b>: bandwidth × T < 16 (filter ringing).",
+    showBand:"Display band", zoomStartL:"Start [s]", zoomEndL:"End [s]", applyZoom:"Apply zoom",
+    t20Start:"Start [s] (≈−5 dB)", t20End:"End [s] (≈−25 dB)", calcT20:"Compute T20",
+    dragHint:"Drag-select on the graph to auto-fill start/end.",
+    decayNote:"Curve = Schroeder (relative dB). Shaded = regression windows. EDT solid, T10 dash, T20 dashdot, T30 dot.",
+    waveNote:"Original waveform. Red = clap, Blue = pre-noise window, Green = 200 ms post-clap.",
+    lgClap:"Clap detected", lgBg:"Pre-noise window", lgPost:"200 ms post-clap"
+  }
+};
+let curLang = 'jp';
+function applyLang(lang){
+  curLang = lang;
+  const d = LANG[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k = el.getAttribute('data-i18n');
+    if(d[k] == null) return;
+    if(['hint1','snrRule','tableNote'].includes(k)){ el.innerHTML = d[k]; return; }
+    const tn = [...el.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
+    if(tn) tn.textContent = d[k];
+    else if(!el.children.length) el.textContent = d[k];
+  });
+  document.querySelectorAll('.btn-lang').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#btn${lang.toUpperCase()}`).classList.add('active');
+}
+document.getElementById('btnJP').onclick = () => applyLang('jp');
+document.getElementById('btnEN').onclick = () => applyLang('en');
+
+/* ── state ── */
+let lastBuffer    = null;   // {fs, data: Float32Array}
+let savedTakes    = [];
+let latestResults = [];
+let mediaStream   = null, recorder = null, recChunks = [];
+
+/* ── helpers ── */
+const db10 = x => 10 * Math.log10(Math.max(1e-24, x));
+const db20 = x => 20 * Math.log10(Math.max(1e-12, Math.abs(x)));
+
+function setState(s, cls=''){
+  const el = document.getElementById('stateEl');
+  el.className = 'pill' + (cls ? ' '+cls : '');
+  el.textContent = s;
+}
+
+/* ── save dots ── */
+function updateDots(){
+  const n = parseInt(document.getElementById('measCount').value) || 1;
+  document.getElementById('targetNum').textContent = n;
+  document.getElementById('savedNum').textContent  = savedTakes.length;
+  const dots = document.getElementById('saveDots');
+  dots.innerHTML = '';
+  for(let i = 0; i < n; i++){
+    const d = document.createElement('div');
+    d.className = 'dot' + (i < savedTakes.length ? ' filled' : '');
+    dots.appendChild(d);
+  }
+  document.getElementById('btnAvg').disabled    = savedTakes.length < 2;
+  document.getElementById('btnCommit').disabled = !lastBuffer || savedTakes.length >= n;
+}
+document.getElementById('measCount').onchange = updateDots;
+updateDots();
+
+/* ── mime ── */
+function pickMime(){
+  const cands = ['audio/mp4;codecs=aac','audio/mp4','audio/webm;codecs=opus','audio/webm'];
+  for(const t of cands) if(window.MediaRecorder && MediaRecorder.isTypeSupported?.(t)) return t;
+  return '';
+}
+
+/* ── decode blob → mono Float32 @ 48kHz ── */
+async function decodeToMono(blob){
+  const ac = new (window.AudioContext || window.webkitAudioContext)({sampleRate: 48000});
+  const buf = await ac.decodeAudioData(await blob.arrayBuffer());
+  const fs = buf.sampleRate;
+  const data = Float32Array.from(buf.getChannelData(0));
+  await ac.close();
+  return {fs, data};
+}
+
+/* ── recording ── */
+async function startRecording(){
+  const sec = Math.max(2, Math.min(30, parseInt(document.getElementById('recSec').value) || 5));
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}
+    });
+  } catch(e){ setState('Mic error: '+e.message, 'ng'); return; }
+
+  const mime = pickMime();
+  recorder = new MediaRecorder(mediaStream, mime ? {mimeType:mime} : undefined);
+  recChunks = [];
+  recorder.ondataavailable = e => { if(e.data?.size > 0) recChunks.push(e.data); };
+  recorder.onstop = async () => {
+    stopStream();
+    const blob = new Blob(recChunks, {type: mime || recChunks[0]?.type || 'audio/mp4'});
+    const playerEl = document.getElementById('player');
+    playerEl.src = URL.createObjectURL(blob);
+    playerEl.style.display = 'block';
+    lastBuffer = await decodeToMono(blob);
+    setState(`recorded · ${lastBuffer.fs} Hz · ${(lastBuffer.data.length/lastBuffer.fs).toFixed(1)} s`);
+    document.getElementById('btnAnalyze').disabled = false;
+    const recBtn = document.getElementById('btnRecord');
+    recBtn.className = 'primary';
+    recBtn.textContent = LANG[curLang].recStart;
+    document.getElementById('btnStop').disabled = true;
+    updateDots();
+  };
+  recorder.start();
+  const recBtn = document.getElementById('btnRecord');
+  recBtn.className = 'recording'; recBtn.textContent = '● REC';
+  document.getElementById('btnStop').disabled = false;
+  setState('recording…', 'active');
+  setTimeout(() => { if(recorder?.state === 'recording') stopRecording(); }, sec * 1000);
+}
+function stopStream(){ mediaStream?.getTracks().forEach(t => t.stop()); mediaStream = null; }
+function stopRecording(){ if(recorder?.state === 'recording') recorder.stop(); else stopStream(); document.getElementById('btnStop').disabled = true; }
+
+document.getElementById('btnRecord').onclick = startRecording;
+document.getElementById('btnStop').onclick   = stopRecording;
+
+/* ── file load ── */
+document.getElementById('fileInput').onchange = async e => {
+  const f = e.target.files?.[0]; if(!f) return;
+  setState('decoding…', 'active');
+  lastBuffer = await decodeToMono(f);
+  const playerEl = document.getElementById('player');
+  playerEl.src = URL.createObjectURL(f);
+  playerEl.style.display = 'block';
+  setState(`loaded · ${lastBuffer.fs} Hz · ${(lastBuffer.data.length/lastBuffer.fs).toFixed(1)} s`);
+  document.getElementById('btnAnalyze').disabled = false;
+  updateDots();
+};
+
+/* ── DSP (acoustics-core.js 経由) ── */
+function makeBands(kind){
+  if(kind === 'ob') return [63, 125, 250, 500, 1000, 2000, 4000];
+  return [50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000];
+}
+
+function bpf(x, fs, fc, kind){
+  // acoustics-core.js の関数をwindow経由で使用（b = 1: 1/1 oct, 3: 1/3 oct）
+  const N = kind === 'tb' ? 24 : 36;
+  const sos = window.designButterworthBandpassSOS_N(fc, fs, N, kind === 'tb' ? 3 : 1);
+  return window.sosFilter(x, sos);
+}
+/* Bandwidth of the 1/b-octave band (base-ten, IEC 61260-1:2014) for the B·T check. */
+function bandwidth(fc, kind){ const g = Math.pow(10, 0.3 / (2 * (kind === 'tb' ? 3 : 1))); return fc * (g - 1 / g); }
+
+/* ── noise floor and truncation point by Lundeby et al. (Acustica 81, 1995) ── */
+const toDb = v => 10 * Math.log10(Math.max(v, 1e-30));
+function blockEnergy(y, fs, sec){
+  const n = Math.max(1, Math.round(sec * fs)), m = Math.floor(y.length / n);
+  const p = new Float64Array(m), t = new Float64Array(m);
+  for(let k = 0; k < m; k++){ let s = 0; for(let i = k * n; i < (k + 1) * n; i++) s += y[i] * y[i]; p[k] = s / n; t[k] = (k + 0.5) * n / fs; }
+  return {p, t};
+}
+function regress(t, L, i0, i1){
+  const xs = Array.from(t.slice(i0, i1)), ys = L.slice(i0, i1);
+  const r = linreg(xs, ys); return {a: r.a, b: r.b};
+}
+const meanOf = a => a.reduce((x, y) => x + y, 0) / Math.max(1, a.length);
+function lundeby(y, fs){
+  let {p, t} = blockEnergy(y, fs, 0.01);
+  let m = p.length; if(m < 20) return null;
+  let L = Array.from(p, toDb);
+  const iPeak = L.indexOf(Math.max(...L)), peakDb = L[iPeak];
+  const tail = Math.max(1, Math.floor(m * 0.1));
+  let noise = meanOf(Array.from(p.slice(m - tail))), Ln = toDb(noise);
+  let iEnd = L.findIndex((v, i) => i > iPeak && v <= Ln + 10);
+  if(iEnd < 0 || iEnd - iPeak < 4) return {ok: false, noise, Ln, DR: peakDb - Ln};
+  let {a, b} = regress(t, L, iPeak, iEnd);
+  if(!(a < 0)) return {ok: false, noise, Ln, DR: peakDb - Ln};
+  let tc = (Ln - b) / a;
+  for(let it = 0; it < 6; it++){
+    const blk = Math.min(0.05, Math.max(0.002, (10 / Math.abs(a)) / 5));   // about 5 intervals per 10 dB
+    ({p, t} = blockEnergy(y, fs, blk)); m = p.length; L = Array.from(p, toDb);
+    const minTail = Math.max(2, Math.floor(m * 0.1));
+    let iN = t.findIndex(v => v >= tc + 5 / Math.abs(a));                  // noise from 5 dB below the crosspoint
+    if(iN < 0 || iN > m - minTail) iN = m - minTail;
+    noise = meanOf(Array.from(p.slice(iN))); Ln = toDb(noise);
+    const i0 = L.findIndex(v => v <= Ln + 20), i1 = L.findIndex(v => v <= Ln + 5); // late decay 5–20 dB above noise
+    if(i0 < 0 || i1 < 0 || i1 - i0 < 3) break;
+    const r = regress(t, L, i0, i1); if(!(r.a < 0)) break;
+    const tcNew = (Ln - r.b) / r.a; a = r.a; b = r.b;
+    const done = Math.abs(tcNew - tc) < 0.001; tc = tcNew; if(done) break;
+  }
+  tc = Math.max(0.02, Math.min(tc, y.length / fs));
+  return {ok: true, tc, noise, Ln, slope: a, DR: peakDb - Ln};
+}
+/* Schroeder integral truncated at the crosspoint, plus the energy of an exponential tail (ISO 3382-1:2009, 5.3.3). */
+function schroederTrunc(y, fs, lb){
+  const nc = Math.min(y.length, Math.max(2, Math.round(lb.tc * fs)));
+  const k = -lb.slope * Math.LN10 / 10;                // decay constant of the late slope [1/s]
+  const C = k > 0 ? lb.noise * fs / k : 0;             // tail energy in sum-of-squares units
+  const e = new Float64Array(nc); let acc = C;
+  for(let i = nc - 1; i >= 0; i--){ acc += y[i] * y[i]; e[i] = acc; }
+  const e0 = e[0] + 1e-24, out = new Float32Array(nc);
+  for(let i = 0; i < nc; i++) out[i] = 10 * Math.log10(Math.max(e[i] / e0, 1e-12));
+  return out;
+}
+
+/* detect clap peak */
+function detectClap(x){
+  let maxVal = 0, peakIdx = 0;
+  for(let i = 0; i < x.length; i++){
+    const a = Math.abs(x[i]);
+    if(a > maxVal){ maxVal = a; peakIdx = i; }
+  }
+  return {peakIdx, peakDb: db20(maxVal)};
+}
+
+/* Schroeder integration → relative dB */
+function schroeder(x){
+  const N = x.length, e = new Float64Array(N);
+  for(let i = 0; i < N; i++) e[i] = x[i] * x[i];
+  for(let i = N-2; i >= 0; i--) e[i] += e[i+1];
+  const e0 = e[0] + 1e-24, out = new Float32Array(N);
+  for(let i = 0; i < N; i++) out[i] = 10 * Math.log10(Math.max(e[i]/e0, 1e-12));
+  return out;
+}
+
+/* Schroeder with BG subtraction */
+function schroederNS(x, pbg){
+  const N = x.length, e = new Float64Array(N);
+  let acc = 0;
+  for(let i = N-1; i >= 0; i--){ const p = x[i]*x[i] - pbg; acc += p > 0 ? p : 0; e[i] = acc; }
+  const e0 = e[0] + 1e-24, out = new Float32Array(N);
+  for(let i = 0; i < N; i++) out[i] = 10 * Math.log10(Math.max(e[i]/e0, 1e-12));
+  return out;
+}
+
+/* linear regression */
+function linreg(x, y){
+  const n = x.length; if(n < 4) return {a:NaN, b:NaN, r2:NaN};
+  let sx=0, sy=0, sxy=0, sxx=0;
+  for(let i=0;i<n;i++){sx+=x[i];sy+=y[i];sxy+=x[i]*y[i];sxx+=x[i]*x[i];}
+  const den = n*sxx - sx*sx; if(Math.abs(den) < 1e-12) return {a:NaN, b:NaN, r2:NaN};
+  const a = (n*sxy - sx*sy)/den, b = (sy - a*sx)/n;
+  const ym = sy/n; let ssT=0, ssR=0;
+  for(let i=0;i<n;i++){ssT+=(y[i]-ym)**2; ssR+=(y[i]-(a*x[i]+b))**2;}
+  return {a, b, r2: ssT > 0 ? 1-ssR/ssT : NaN};
+}
+
+function pickSeg(dec, hi, lo){
+  const N = dec.length; let i0=-1, i1=-1;
+  for(let i=0;i<N;i++) if(dec[i] <= hi){ i0=i; break; }
+  if(i0 < 0) return null;
+  for(let i=i0;i<N;i++) if(dec[i] <= lo){ i1=i; break; }
+  return (i1 >= 0 && i1-i0 >= 80) ? [i0, i1] : null;
+}
+
+function fitRT(dec, fs, mode){
+  const W = {EDT:[0,-10], T10:[-5,-15], T20:[-5,-25], T30:[-5,-35]}[mode];
+  const seg = pickSeg(dec, W[0], W[1]);
+  if(!seg) return {T:NaN, a:NaN, b:NaN, r2:NaN, seg:null};
+  const [i0,i1] = seg, n = i1-i0;
+  const xs = new Float64Array(n), ys = new Float64Array(n);
+  for(let k=0;k<n;k++){xs[k]=i0+k; ys[k]=dec[i0+k];}
+  const {a,b,r2} = linreg(xs, ys);
+  if(!isFinite(a) || Math.abs(a) < 1e-15) return {T:NaN, a, b, r2, seg};
+  const T60 = -60/(a*fs);
+  return (T60 > 0 && T60 < 30) ? {T:T60, a, b, r2, seg} : {T:NaN, a, b, r2, seg};
+}
+
+/* Minimum dynamic range (peak to noise) for each evaluation range: bottom of the range
+   at least 10 dB above the noise (ISO 3382-2:2008: T20 needs 35 dB, T30 needs 45 dB). */
+const DR_MIN = {EDT: 20, T10: 25, T20: 35, T30: 45};
+function fitAll(dec, fs, DR){
+  const fits = {};
+  for(const k of ['EDT', 'T10', 'T20', 'T30']){
+    const f = fitRT(dec, fs, k);
+    if(!(DR >= DR_MIN[k])) { f.T = NaN; f.short = true; }
+    fits[k] = f;
+  }
+  let rep = {T: NaN, r2: NaN}, tag = '—';
+  for(const k of ['T30', 'T20', 'T10', 'EDT']) if(isFinite(fits[k].T)){ rep = fits[k]; tag = k; break; }
+  return {fits, rep, tag};
+}
+
+function manualFit(r, fs, t0, t1){
+  if(!r.decay || !isFinite(t0) || !isFinite(t1) || t1 <= t0) return {T:NaN, r2:NaN};
+  const i0 = Math.max(0, Math.round(t0*fs)), i1 = Math.min(r.decay.length, Math.round(t1*fs));
+  const n = i1-i0; if(n < 20) return {T:NaN, r2:NaN};
+  const xs = new Float64Array(n), ys = new Float64Array(n);
+  for(let k=0;k<n;k++){xs[k]=i0+k; ys[k]=r.decay[i0+k];}
+  const {a, b, r2} = linreg(xs, ys);
+  return {T: (isFinite(a) && a < 0 ? -60/(a*fs) : NaN), r2, seg:[i0,i1]};
+}
+
+/* ── ANALYZE ── */
+async function analyze(){
+  if(!lastBuffer){ setState('no audio','ng'); return; }
+  const {fs, data:x} = lastBuffer;
+  const clap = detectClap(x);
+  if(clap.peakDb < -40){
+    setState(`手拍子未検出 (peak ${clap.peakDb.toFixed(1)} dBFS)`, 'ng'); return;
+  }
+  setState('解析中…','active');
+  document.getElementById('btnAnalyze').disabled = true;
+
+  const pi = clap.peakIdx;
+  // BG window: [peak-0.80s, peak-0.05s]
+  const preStart = Math.max(0, pi - Math.round(0.80*fs));
+  const preEnd   = Math.max(0, pi - Math.round(0.05*fs));
+  const postN    = Math.round(0.20*fs);
+  // analysis window: 50ms before peak
+  const anaStart = Math.max(0, pi - Math.round(0.05*fs));
+  const xAna = x.slice(anaStart);  // raw slice, no mean subtraction
+
+  const kind    = document.getElementById('bandType').value;
+  const bands   = makeBands(kind);
+  const inc63   = document.getElementById('snrInclude63').checked;
+  const useNS   = document.getElementById('noiseComp').checked;
+
+  const results = [];
+  for(const fc of bands){
+    // SNR: BPF on full signal
+    const yFull = bpf(x, fs, fc, kind);
+    let pbg=0, n_bg=0;
+    for(let i=preStart; i<preEnd; i++){ pbg += yFull[i]*yFull[i]; n_bg++; }
+    pbg /= Math.max(1, n_bg);
+    let psig=0;
+    for(let i=0; i<postN; i++){ const v = yFull[pi+i]||0; psig += v*v; }
+    psig /= Math.max(1, postN);
+    const SNR = db10(psig / Math.max(pbg, 1e-24));
+
+    // Decay: BPF on analysis window; noise floor and truncation point by Lundeby
+    // Start the decay at this band's own peak, so EDT does not include the pre-onset part.
+    const yBand = bpf(xAna, fs, fc, kind);
+    let ipk = 0, vpk = 0;
+    for(let i = 0; i < yBand.length; i++){ const v = Math.abs(yBand[i]); if(v > vpk){ vpk = v; ipk = i; } }
+    const yAna = yBand.subarray(ipk);
+    const lb   = lundeby(yAna, fs);
+    const DR   = lb ? lb.DR : NaN;
+    const dec  = (useNS && lb && lb.ok) ? schroederTrunc(yAna, fs, lb) : schroeder(yAna);
+
+    const {fits, rep, tag} = fitAll(dec, fs, DR);
+    const BT = isFinite(rep.T) ? bandwidth(fc, kind) * rep.T : NaN;
+    results.push({
+      fc, SNR, DR, BT, decay:dec, fits, rep, repTag:tag,
+      EDT:fits.EDT.T, T10:fits.T10.T, T20:fits.T20.T, T30:fits.T30.T,
+      R2: isFinite(rep.r2) ? rep.r2.toFixed(3) : '',
+      judge: (!inc63 && fc===63) ? '—' : (DR >= DR_MIN.T20 ? 'OK' : 'NG'),
+      T20_manual: NaN
+    });
+  }
+  latestResults = results;
+
+  renderTable();
+  renderOverall();
+  renderDecayInit();
+  drawWave(x, fs, pi, preStart, preEnd, postN, anaStart);
+
+  document.getElementById('manualPanel').classList.toggle('vis', document.getElementById('manualRegress').checked);
+  document.getElementById('btnCommit').disabled = savedTakes.length >= (parseInt(document.getElementById('measCount').value)||1);
+  document.getElementById('btnDownloadCsv').disabled = false;
+  document.getElementById('btnAnalyze').disabled = false;
+  setState('解析完了');
+}
+document.getElementById('btnAnalyze').onclick = analyze;
+
+/* ── TABLE ── */
+function renderTable(){
+  const tbody   = document.getElementById('resultBody'); tbody.innerHTML = '';
+  const manMode = document.getElementById('manualRegress').checked;
+  for(const r of latestResults){
+    const rts   = [r.T10, r.T20, r.T30].filter(isFinite);
+    const star  = rts.length>=2 && rts.every(t=>t<=1.0) && (Math.max(...rts)-Math.min(...rts))>=0.3;
+    const bang  = (rts.length>=2 && (Math.max(...rts)-Math.min(...rts))>=0.1*Math.min(...rts)) || rts.some(t=>t>=10);
+    function fmtT(v, warn){
+      if(!isFinite(v)) return `<span style="color:var(--dim)">—</span>`;
+      let s = v.toFixed(3);
+      if(warn && bang) s += `<span class="wm" title="reliability warning">!!</span>`;
+      if(warn && star) s += `<span class="wm" title="short-RT inconsistency">※</span>`;
+      return s;
+    }
+    const t20 = manMode
+      ? (isFinite(r.T20_manual) ? `${r.T20_manual.toFixed(3)} <span style="color:var(--ok);font-size:.62rem">(M)</span>` : `<span style="color:var(--dim)">—</span>`)
+      : fmtT(r.T20, true);
+    const jc = r.judge==='OK'?'j-ok':r.judge==='NG'?'j-ng':'j-na';
+    const dash = `<span style="color:var(--dim)">—</span>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.fc}</td>
+      <td>${manMode ? dash : fmtT(r.EDT, false)}</td>
+      <td>${manMode ? dash : fmtT(r.T10, true)}</td>
+      <td>${t20}</td>
+      <td>${manMode ? dash : fmtT(r.T30, true)}</td>
+      <td style="color:var(--dim)">${manMode ? '' : r.R2}</td>
+      <td>${r.SNR.toFixed(1)}</td>
+      <td>${isFinite(r.DR) ? r.DR.toFixed(1) : '—'}${isFinite(r.BT) && r.BT < 16 ? `<span class="wm" title="B·T = ${r.BT.toFixed(1)} < 16: filter ringing may lengthen T">BT</span>` : ''}</td>
+      <td class="${jc}">${r.judge}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+document.getElementById('manualRegress').onchange = () => {
+  document.getElementById('manualPanel').classList.toggle('vis', document.getElementById('manualRegress').checked);
+  renderTable();
+  if(latestResults.length)
+    Plotly.relayout('decayPlot', {dragmode: document.getElementById('manualRegress').checked ? 'select' : 'zoom'});
+};
+
+/* ── OVERALL ── */
+function renderOverall(){
+  const inc63 = document.getElementById('snrInclude63').checked;
+  const valid  = latestResults.filter(r => inc63 || r.fc !== 63);
+  const okN    = valid.filter(r => r.DR >= DR_MIN.T20).length;
+  const ok     = okN >= Math.ceil(valid.length * 0.6);
+  const el     = document.getElementById('overallJudge');
+  el.className = 'overall-val ' + (ok ? 'ok' : 'ng');
+  el.textContent = ok ? 'OK' : 'NG';
+  document.getElementById('overallNote').textContent = `(${okN}/${valid.length} bands DR ≥ ${DR_MIN.T20} dB)`;
+}
+
+/* ── DECAY PLOT ── */
+function renderDecayInit(){
+  const fs = lastBuffer?.fs || 48000;
+  const detailBand = document.getElementById('detailBand');
+  detailBand.innerHTML = '';
+  for(const r of latestResults){
+    const o = document.createElement('option');
+    o.value = String(r.fc); o.textContent = r.fc + ' Hz';
+    detailBand.appendChild(o);
+  }
+  if(latestResults[0]){
+    detailBand.value = String(latestResults[0].fc);
+    document.getElementById('zoomEnd').value = (latestResults[0].decay.length/fs * 0.75).toFixed(2);
+  }
+  const render = () => renderDecay(fs);
+  detailBand.onchange = render;
+  document.getElementById('applyZoom').onclick = render;
+  render();
+}
+
+function renderDecay(fs){
+  const fc = parseFloat(document.getElementById('detailBand').value);
+  const r  = latestResults.find(v => v.fc === fc) || latestResults[0];
+  if(!r) return;
+  const N = r.decay.length;
+  const t = Array.from({length:N}, (_,i) => i/fs);
+  const y = Array.from(r.decay);
+  const z0 = parseFloat(document.getElementById('zoomStart').value) || 0;
+  const z1 = parseFloat(document.getElementById('zoomEnd').value)   || (N/fs);
+  const SEG = {
+    EDT:{fill:'rgba(148,163,184,.15)', line:'#94a3b8', dash:'solid'},
+    T10:{fill:'rgba(96,165,250,.15)',  line:'#60a5fa', dash:'dash'},
+    T20:{fill:'rgba(52,211,153,.15)',  line:'#34d399', dash:'dashdot'},
+    T30:{fill:'rgba(251,191,36,.15)',  line:'#fbbf24', dash:'dot'},
+  };
+  const shapes=[], traces=[{
+    name:'Schroeder', x:t, y:y, mode:'lines',
+    line:{width:1.5, color:'rgba(200,212,232,0.75)'}
+  }];
+  for(const key of ['EDT','T10','T20','T30']){
+    const f = r.fits[key]; if(!f?.seg) continue;
+    const [i0,i1] = f.seg, x0=t[i0], x1=t[Math.max(i1-1,i0)];
+    shapes.push({type:'rect',xref:'x',yref:'paper',x0,x1,y0:0,y1:1,fillcolor:SEG[key].fill,line:{width:0}});
+    if(isFinite(f.a)){
+      traces.push({
+        name:`${key}${isFinite(r[key])?' '+r[key].toFixed(2)+'s':''}`,
+        x:[x0,x1], y:[f.a*i0+f.b, f.a*(i1-1)+f.b], mode:'lines',
+        line:{dash:SEG[key].dash, width:2, color:SEG[key].line}
+      });
+    }
+  }
+  const layout = {
+    paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(22,28,42,.8)',
+    font:{family:"'Space Mono',monospace", size:11, color:'#4e5f7a'},
+    margin:{l:54,r:16,t:10,b:44},
+    xaxis:{title:'Time [s]', range:[z0,z1], color:'#5a6a84', gridcolor:'rgba(180,200,255,.06)', linecolor:'rgba(180,200,255,.15)'},
+    yaxis:{title:'Level [dB]', range:[-80,3], color:'#5a6a84', gridcolor:'rgba(180,200,255,.06)', linecolor:'rgba(180,200,255,.15)'},
+    legend:{bgcolor:'rgba(0,0,0,0)', font:{size:10}},
+    dragmode: document.getElementById('manualRegress').checked ? 'select' : 'zoom',
+    shapes, showlegend:true
+  };
+  Plotly.react('decayPlot', traces, layout, {responsive:true, displaylogo:false});
+  const gd = document.getElementById('decayPlot');
+  gd.removeAllListeners?.('plotly_selected');
+  gd.on('plotly_selected', ev => {
+    if(!document.getElementById('manualRegress').checked || !ev?.range?.x) return;
+    document.getElementById('manualT20Start').value = Math.max(0, ev.range.x[0]).toFixed(3);
+    document.getElementById('manualT20End').value   = Math.max(0, ev.range.x[1]).toFixed(3);
+  });
+}
+
+/* ── MANUAL T20 ── */
+document.getElementById('btnManualT20Regress').onclick = () => {
+  const fc = parseFloat(document.getElementById('detailBand').value);
+  const r  = latestResults.find(v => v.fc === fc);
+  if(!r){ document.getElementById('manualT20Result').textContent = '—'; return; }
+  const t0 = parseFloat(document.getElementById('manualT20Start').value);
+  const t1 = parseFloat(document.getElementById('manualT20End').value);
+  const {T, r2} = manualFit(r, lastBuffer.fs, t0, t1);
+  if(isFinite(T)){
+    r.T20_manual = T;
+    document.getElementById('manualT20Result').textContent = `T20 = ${T.toFixed(3)} s  (R²=${isFinite(r2)?r2.toFixed(3):'—'})`;
+  } else {
+    r.T20_manual = NaN;
+    document.getElementById('manualT20Result').textContent = '—';
+  }
+  renderTable();
+};
+
+/* ── WAVEFORM ── */
+function drawWave(x, fs, pi, preStart, preEnd, postN, anaStart){
+  const cv = document.getElementById('wave');
+  const W = cv.width = cv.clientWidth || cv.offsetWidth || 800, H = cv.height = 130;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#161c2a'; ctx.fillRect(0,0,W,H);
+  const span = x.length - anaStart;
+  const pxOf = idx => Math.round((idx - anaStart) / span * W);
+  // BG zone
+  ctx.fillStyle = 'rgba(96,165,250,.1)';
+  ctx.fillRect(pxOf(preStart), 0, pxOf(preEnd)-pxOf(preStart), H);
+  // post zone
+  ctx.fillStyle = 'rgba(52,211,153,.1)';
+  ctx.fillRect(pxOf(pi), 0, pxOf(pi+postN)-pxOf(pi), H);
+  // waveform
+  ctx.strokeStyle = 'rgba(200,212,232,.6)'; ctx.lineWidth = 1; ctx.beginPath();
+  for(let p=0; p<W; p++){
+    const si = anaStart + Math.round(p*span/W);
+    const v  = x[Math.max(0, Math.min(x.length-1, si))];
+    const py = H*(0.5 - 0.45*v);
+    p === 0 ? ctx.moveTo(p,py) : ctx.lineTo(p,py);
+  }
+  ctx.stroke();
+  // peak line
+  const ppx = pxOf(pi);
+  ctx.strokeStyle = '#f87171'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(ppx,0); ctx.lineTo(ppx,H); ctx.stroke();
+}
+
+/* ── COMMIT / AVERAGE ── */
+document.getElementById('btnCommit').onclick = () => {
+  if(!latestResults.length) return;
+  savedTakes.push(latestResults.map(r => ({...r})));
+  updateDots(); setState(`${savedTakes.length}点保存済み`);
+};
+document.getElementById('btnAvg').onclick = () => {
+  if(savedTakes.length < 2) return;
+  const fcs = savedTakes[0].map(r => r.fc);
+  const tbody = document.getElementById('resultBody'); tbody.innerHTML = '';
+  fcs.forEach((fc, bi) => {
+    const g  = savedTakes.map(t => t[bi]);
+    const av = arr => { const a=arr.filter(isFinite); return a.length ? a.reduce((x,y)=>x+y)/a.length : NaN; };
+    const snrA = av(g.map(r => r.SNR)), drA = av(g.map(r => r.DR));
+    const fmt  = v => isFinite(v) ? v.toFixed(3) : `<span style="color:var(--dim)">—</span>`;
+    const jc   = drA >= DR_MIN.T20 ? 'j-ok' : 'j-ng';
+    const tr   = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${fc}</td>
+      <td>${fmt(av(g.map(r=>r.EDT)))}</td>
+      <td>${fmt(av(g.map(r=>r.T10)))}</td>
+      <td>${fmt(av(g.map(r=>r.T20)))}</td>
+      <td>${fmt(av(g.map(r=>r.T30)))}</td>
+      <td style="color:var(--dim)">avg×${savedTakes.length}</td>
+      <td>${snrA.toFixed(1)}</td>
+      <td>${isFinite(drA) ? drA.toFixed(1) : '—'}</td>
+      <td class="${jc}">${drA>=DR_MIN.T20?'OK':'NG'}</td>`;
+    tbody.appendChild(tr);
+  });
+  setState(`${savedTakes.length}点平均表示中`);
+};
+
+/* ── CSV ── */
+document.getElementById('btnDownloadCsv').onclick = () => {
+  if(!latestResults.length) return;
+  const h = ['fc_Hz','EDT_s','T10_s','T20_s','T30_s','R2','SNR_dB','DR_dB','BT','Judge'];
+  const lines = [h.join(',')];
+  for(const r of latestResults){
+    const t20 = isFinite(r.T20_manual) ? r.T20_manual : r.T20;
+    lines.push([
+      r.fc, isFinite(r.EDT)?r.EDT.toFixed(3):'',
+      isFinite(r.T10)?r.T10.toFixed(3):'',
+      isFinite(t20)?t20.toFixed(3):'',
+      isFinite(r.T30)?r.T30.toFixed(3):'',
+      r.R2, r.SNR.toFixed(1), isFinite(r.DR)?r.DR.toFixed(1):'', isFinite(r.BT)?r.BT.toFixed(1):'', r.judge
+    ].join(','));
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\n')], {type:'text/csv'}));
+  a.download = `RT_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+};
+
+/* ── init ── */
+applyLang('jp');
+
+} // end startApp()
+
+/* acoustics-core.js のモジュールロード完了を待ってから起動 */
+if(window._acousticsCoreReady){
+  startApp();
+} else {
+  window.addEventListener('acoustics-ready', startApp, {once:true});
+}
+</script>
+</body>
+</html>

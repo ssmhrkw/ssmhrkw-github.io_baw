@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Susumu Hirakawa | Building Acoustics Researcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&family=Noto+Serif+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --bg2: #12151c;
+    --bg3: #1a1e28;
+    --border: rgba(180,200,255,0.1);
+    --border-accent: rgba(100,160,255,0.25);
+    --text: #c8d4e8;
+    --text-dim: #6e7f99;
+    --text-bright: #e8f0ff;
+    --accent: #4a8fff;
+    --accent2: #7eb8ff;
+    --accent-glow: rgba(74,143,255,0.15);
+    --gold: #c8a855;
+    --gold-dim: rgba(200,168,85,0.2);
+    --mono: 'Space Mono', monospace;
+    --serif: 'EB Garamond', Georgia, serif;
+    --jp: 'Noto Serif JP', serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.75;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === WAVE CANVAS === */
+  #wave-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.18;
+  }
+
+  /* === LAYOUT === */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* === HEADER === */
+  header {
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .header-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-tag::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-weight: 500;
+    color: var(--text-bright);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+
+  .name-jp {
+    font-family: var(--jp);
+    font-weight: 300;
+    font-size: 1.1rem;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    margin-bottom: 32px;
+  }
+
+  .affiliation {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    line-height: 2;
+    border-left: 2px solid var(--border-accent);
+    padding-left: 16px;
+  }
+  .affiliation strong {
+    color: var(--accent2);
+    font-weight: 400;
+  }
+
+  .header-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 48px;
+    align-items: end;
+  }
+
+  .contact-block {
+    text-align: right;
+  }
+  .contact-block a {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: color 0.2s;
+    margin-bottom: 4px;
+  }
+  .contact-block a:hover { color: var(--accent); }
+  .contact-block span {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+
+  .profiles {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .profiles a {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 2px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: inline-block;
+  }
+  .profiles a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  /* === SECTIONS === */
+  section {
+    padding: 64px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border-accent), transparent);
+  }
+
+  /* === TOOLS GRID === */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .tool-card {
+    background: var(--bg2);
+    padding: 24px;
+    text-decoration: none;
+    display: block;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.2s;
+  }
+  .tool-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transition: transform 0.3s;
+    transform-origin: left;
+  }
+  .tool-card:hover { background: var(--bg3); }
+  .tool-card:hover::before { transform: scaleX(1); }
+
+  .tool-tag {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .tool-name {
+    font-family: var(--jp);
+    font-size: 0.88rem;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  .tool-desc {
+    font-family: var(--jp);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .tool-arrow {
+    position: absolute;
+    bottom: 20px; right: 20px;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--border-accent);
+    transition: color 0.2s, transform 0.2s;
+  }
+  .tool-card:hover .tool-arrow {
+    color: var(--accent);
+    transform: translate(2px, -2px);
+  }
+
+  /* === PUBLICATIONS === */
+  .pub-group { margin-bottom: 48px; }
+  .pub-group:last-child { margin-bottom: 0; }
+
+  .pub-group-title {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--gold-dim);
+  }
+
+  .pub-item {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 0 20px;
+    margin-bottom: 16px;
+    align-items: start;
+  }
+  .pub-year {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    padding-top: 3px;
+    text-align: right;
+  }
+  .pub-content { }
+  .pub-content a {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    transition: color 0.2s;
+    font-family: var(--jp);
+  }
+  .pub-content a:hover { color: var(--accent2); }
+  .pub-meta {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    margin-top: 3px;
+    letter-spacing: 0.03em;
+  }
+
+  /* === FOOTER === */
+  footer {
+    padding: 40px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .footer-mono {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+
+  /* === WAVEFORM DECORATION === */
+  .wave-decoration {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 24px;
+  }
+  .wave-bar {
+    width: 2px;
+    background: var(--accent);
+    border-radius: 1px;
+    animation: wave-pulse 1.4s ease-in-out infinite;
+    opacity: 0.6;
+  }
+  @keyframes wave-pulse {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1); }
+  }
+
+  /* === FADE IN === */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: fadeUp 0.7s ease forwards;
+  }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  @media (max-width: 640px) {
+    .header-grid { grid-template-columns: 1fr; }
+    .contact-block { text-align: left; }
+    .profiles { justify-content: flex-start; }
+    .tools-grid { grid-template-columns: 1fr; }
+    .pub-item { grid-template-columns: 36px 1fr; gap: 0 12px; }
+    h1 { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="wave-canvas"></canvas>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-tag fade-in">Building Acoustics Researcher</div>
+    <div class="header-grid">
+      <div>
+        <h1 class="fade-in delay-1">Susumu Hirakawa</h1>
+        <p class="name-jp fade-in delay-1">平川 侑</p>
+        <div class="affiliation fade-in delay-2">
+          Building Research Institute<br>
+          <strong>建築研究所</strong><br>
+          Department of Environmental Engineering · 環境研究グループ<br>
+          <strong>Senior Researcher　主任研究官</strong>
+        </div>
+      </div>
+      <div class="contact-block fade-in delay-3">
+        <div class="wave-decoration" style="justify-content:flex-end;margin-bottom:16px;">
+          <div class="wave-bar" style="height:8px;animation-delay:0s"></div>
+          <div class="wave-bar" style="height:14px;animation-delay:0.1s"></div>
+          <div class="wave-bar" style="height:20px;animation-delay:0.2s"></div>
+          <div class="wave-bar" style="height:16px;animation-delay:0.3s"></div>
+          <div class="wave-bar" style="height:24px;animation-delay:0.4s"></div>
+          <div class="wave-bar" style="height:18px;animation-delay:0.5s"></div>
+          <div class="wave-bar" style="height:12px;animation-delay:0.6s"></div>
+          <div class="wave-bar" style="height:20px;animation-delay:0.7s"></div>
+          <div class="wave-bar" style="height:10px;animation-delay:0.8s"></div>
+          <div class="wave-bar" style="height:16px;animation-delay:0.9s"></div>
+          <div class="wave-bar" style="height:22px;animation-delay:1.0s"></div>
+          <div class="wave-bar" style="height:14px;animation-delay:1.1s"></div>
+        </div>
+        <a id="email-link" href="#">メール</a><noscript><span>s-hirakawa［at］kenken.go.jp</span></noscript>
+        <span>〒305-0802 茨城県つくば市立原1番地</span>
+        <div class="profiles">
+          <a href="https://www.linkedin.com/in/susumuhirakawa/" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="https://www.researchgate.net/profile/Susumu-Hirakawa" target="_blank" rel="noopener">ResearchGate</a>
+          <a href="https://researchmap.jp/sh_liv?lang=en" target="_blank" rel="noopener">researchmap</a>
+          <a href="https://nrid.nii.ac.jp/ja/nrid/1000070848978/" target="_blank" rel="noopener">KAKEN</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PUBLICATIONS -->
+  <section>
+    <div class="section-label">Publications &amp; Research Output</div>
+
+    <!-- Peer-reviewed -->
+    <div class="pub-group">
+      <div class="pub-group-title">Peer-reviewed Papers　査読付き論文</div>
+
+      <div class="pub-item">
+        <div class="pub-year">2023</div>
+        <div class="pub-content">
+          <a href="https://doi.org/10.3130/aije.88.154" target="_blank" rel="noopener">
+            アンケート調査結果における分譲・賃貸集合住宅の遮音性能の現状と満足度（その１）：居住者や建築物属性の明確化および課題点の抽出
+          </a>
+          <div class="pub-meta">日本建築学会環境系論文集 88巻805号</div>
+        </div>
+      </div>
+
+      <div class="pub-item">
+        <div class="pub-year">2022</div>
+        <div class="pub-content">
+          <a href="https://doi.org/10.3130/AIJE.87.371" target="_blank" rel="noopener">
+            小型T字・十字型接合部試験体によるCLTパネル工法建築物の側路伝搬音の影響に関する基礎的検討
+          </a>
+          <div class="pub-meta">日本建築学会環境系論文集 87巻797号</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports -->
+    <div class="pub-group">
+      <div class="pub-group-title">Technical Reports　国総研資料</div>
+
+      <div class="pub-item">
+        <div class="pub-year">2025</div>
+        <div class="pub-content">
+          <a href="https://www.nilim.go.jp/lab/bcg/siryou/tnn/tnn1326.htm" target="_blank" rel="noopener">
+            鉄骨造・木造における実建物と実験室の重量床衝撃音遮断性能の比較
+          </a>
+          <div class="pub-meta">国総研資料 第1326号</div>
+        </div>
+      </div>
+
+      <div class="pub-item">
+        <div class="pub-year">2024</div>
+        <div class="pub-content">
+          <a href="https://www.nilim.go.jp/lab/bcg/siryou/tnn/tnn1263.htm" target="_blank" rel="noopener">
+            非RC造を対象とした標準重量衝撃源（ゴムボール）による遮断性能の調査
+          </a>
+          <div class="pub-meta">国総研資料 第1263号</div>
+        </div>
+      </div>
+
+      <div class="pub-item">
+        <div class="pub-year">2024</div>
+        <div class="pub-content">
+          <a href="https://www.nilim.go.jp/lab/bcg/siryou/tnn/tnn1261.htm" target="_blank" rel="noopener">
+            集合住宅における居住者の音環境評価（オンライン調査）
+          </a>
+          <div class="pub-meta">国総研資料 第1261号</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contributions -->
+    <div class="pub-group">
+      <div class="pub-group-title">Contributions &amp; Articles　寄稿・解説</div>
+
+      <div class="pub-item">
+        <div class="pub-year">2025</div>
+        <div class="pub-content">
+          <a href="https://ndlsearch.ndl.go.jp/books/R000000004-I033960599" target="_blank" rel="noopener">
+            集合住宅の音環境に関する法制度の変遷と規格・基準の課題
+          </a>
+          <div class="pub-meta">騒音制御 49巻1号</div>
+        </div>
+      </div>
+
+      <div class="pub-item">
+        <div class="pub-year">2024</div>
+        <div class="pub-content">
+          <a href="https://ndlsearch.ndl.go.jp/books/R000000004-I033835442" target="_blank" rel="noopener">
+            日本の集合住宅における音環境に関する基準類の変遷
+          </a>
+          <div class="pub-meta">日本騒音制御工学会 秋季研究発表会講演論文集</div>
+        </div>
+      </div>
+
+      <div class="pub-item">
+        <div class="pub-year">2024</div>
+        <div class="pub-content">
+          <a href="https://ndlsearch.ndl.go.jp/books/R000000004-I033409955" target="_blank" rel="noopener">
+            床衝撃音性能における実験室測定の現状と将来
+          </a>
+          <div class="pub-meta">音響技術 53巻1号</div>
+        </div>
+      </div>
+
+      <div class="pub-item">
+        <div class="pub-year">2023</div>
+        <div class="pub-content">
+          <a href="https://doi.org/10.20697/jasj.79.12_604" target="_blank" rel="noopener">
+            古くて新しい建築音響の問題-床衝撃音-
+          </a>
+          <div class="pub-meta">日本音響学会誌 79巻12号</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PhD -->
+    <div class="pub-group">
+      <div class="pub-group-title">Doctoral Thesis　博士論文</div>
+      <div class="pub-item">
+        <div class="pub-year">2018</div>
+        <div class="pub-content">
+          <a href="https://livrepository.liverpool.ac.uk/3028540/" target="_blank" rel="noopener">
+            Prediction of impact sound transmission with heavy impact sources in heavyweight buildings
+          </a>
+          <div class="pub-meta">University of Liverpool, PhD Thesis</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grants -->
+    <div class="pub-group">
+      <div class="pub-group-title">Competitive Funding　競争的資金</div>
+
+      <div class="pub-item">
+        <div class="pub-year">2026–</div>
+        <div class="pub-content">
+          <span style="font-family:var(--jp);font-size:0.9rem;color:var(--text);line-height:1.6;">
+            深層学習による図面情報からの床衝撃音遮断性能の予測と設計支援システムへの展開
+          </span>
+          <div class="pub-meta">科研費 若手研究 · 課題番号 26K17541</div>
+        </div>
+      </div>
+
+      <div class="pub-item">
+        <div class="pub-year">2020–</div>
+        <div class="pub-content">
+          <a href="https://research-er.jp/projects/view/1113423" target="_blank" rel="noopener">
+            中高層木造建築普及に備えた実用性の高い重量床衝撃音遮断性能の測定方法の確立
+          </a>
+          <div class="pub-meta">科研費 若手研究 · 課題番号 20K14891</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+  <section>
+    <div class="section-label">Acoustic Tools &amp; Calculators</div>
+    <p style="font-family:var(--jp);font-size:0.8rem;color:var(--text-dim);margin-bottom:32px;line-height:1.9;">
+      日常で使用するPythonコードをベースに、ブラウザ上でGUIとして動作するよう実装した試作ツール群です。
+    </p>
+    <div class="tools-grid">
+
+      <a class="tool-card" href="slab-thickness-quick.html" target="_blank" rel="noopener">
+        <div class="tool-tag">Floor Impact / Design</div>
+        <div class="tool-name">必要スラブ厚の逆算</div>
+        <div class="tool-desc">目標LHとスラブ・下室寸法から等価厚を算出。梁条件81通りの分布と計算書つき。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="revtime_recorder.html" target="_blank" rel="noopener">
+        <div class="tool-tag">Measurement</div>
+        <div class="tool-name">手をたたいて残響時間を算出</div>
+        <div class="tool-desc">手拍子から残響時間を推定。ブラウザのみで動作。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="Floorimpact.html" target="_blank" rel="noopener">
+        <div class="tool-tag">Floor Impact</div>
+        <div class="tool-name">床衝撃音レベルと等級の予測</div>
+        <div class="tool-desc">実務的騒音対策指針（応用編）p188–202を参照した計算。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="plates.html" target="_blank" rel="noopener">
+        <div class="tool-tag">Vibration</div>
+        <div class="tool-name">板の曲げ波・固有振動数</div>
+        <div class="tool-desc">SS-SS-SS-SS条件で周波数とインピーダンスを可視化。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="FilterDesign.html" target="_blank" rel="noopener">
+        <div class="tool-tag">Signal Processing</div>
+        <div class="tool-name">1/n オクターブ バンドパス設計</div>
+        <div class="tool-desc">Butterworth フィルタを設計し、IEC 61260:1995 の許容範囲と比較。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="wav_Inspector.html" target="_blank" rel="noopener">
+        <div class="tool-tag">DA-20 / WAV</div>
+        <div class="tool-name">DA-20 wavヘッダ閲覧</div>
+        <div class="tool-desc">録音ファイルのヘッダメタ情報を即時表示。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="wav2Fmax.html" target="_blank" rel="noopener">
+        <div class="tool-tag">DA-20 / Analysis</div>
+        <div class="tool-name">DA-20 wav→帯域計算</div>
+        <div class="tool-desc">対象Chのoct/⅓octおよびFast-max計算。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="NA28_FIC.html" target="_blank" rel="noopener">
+        <div class="tool-tag">NA-28 / Insulation</div>
+        <div class="tool-name">NA-28 RND→遮断性能計算</div>
+        <div class="tool-desc">RNDをドラッグ＆ドロップしてFICを推定。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="rnd_viewer.html" target="_blank" rel="noopener">
+        <div class="tool-tag">NA-28 / Viewer</div>
+        <div class="tool-name">NA-28 RNDビューア</div>
+        <div class="tool-desc">Excelを起動せずRNDを素早く確認。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="MeasurementPositions.html" target="_blank" rel="noopener">
+        <div class="tool-tag">Planning</div>
+        <div class="tool-name">受音点・加振点の配置計画</div>
+        <div class="tool-desc">JIS A 1418・ISO 16283-2・ISO 10140-3 の距離条件で配置を作成し、モードの節付近を警告。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="CSV_Segmenter.html" target="_blank" rel="noopener">
+        <div class="tool-tag">Data / Utility</div>
+        <div class="tool-name">打撃区間の切り出し・可視化</div>
+        <div class="tool-desc">計測 CSV からハンマ打撃の区間を自動検出して切り出し、チャンネルごとに集計。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="calcorr.html" target="_blank" rel="noopener">
+        <div class="tool-tag">Measurement / Calibration</div>
+        <div class="tool-name">マイクロホン校正ゲインの算出</div>
+        <div class="tool-desc">校正器（94/114 dB、1 kHz/250 Hz）の録音 WAV から、各チャンネルの換算係数を算出。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="Laminated-Calc.html" target="_blank" rel="noopener">
+        <div class="tool-tag">Sound Insulation</div>
+        <div class="tool-name">積層・二重壁の透過損失</div>
+        <div class="tool-desc">質量則・コインシデンス（Sharp の方法）・二重壁の式による透過損失の参考計算。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="SlabFDTD.html" target="_blank" rel="noopener">
+        <div class="tool-tag">Vibration / FDTD</div>
+        <div class="tool-name">スラブ振動の FDTD 解析</div>
+        <div class="tool-desc">単純支持板の時間応答を FDTD で計算し、ピークを解析モードと照合。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="standing-wave.html" target="_blank" rel="noopener">
+        <div class="tool-tag">Vibration</div>
+        <div class="tool-name">スラブのモード形と v/F 分布</div>
+        <div class="tool-desc">単純支持板の速度/加振力の面内分布をモード別に可視化。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+      <a class="tool-card" href="TSEA.html" target="_blank" rel="noopener">
+        <div class="tool-tag">SEA</div>
+        <div class="tool-name">過渡 SEA（TSEA）</div>
+        <div class="tool-desc">損失係数・結合損失係数を JSON で読み込み、サブシステムの時間応答と帯域別 LFmax を計算。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- OUTREACH -->
+  <section>
+    <div class="section-label">Outreach</div>
+    <div class="tools-grid">
+      <a class="tool-card" href="cm/" target="_blank" rel="noopener">
+        <div class="tool-tag">Video</div>
+        <div class="tool-name">集合住宅の音 30秒CM「おたがいに、少しの配慮を。」</div>
+        <div class="tool-desc">まわりの音でまぎれる音、配慮で小さくなる音、それでも聞こえる音を30秒で紹介（16:9・9:16）。</div>
+        <div class="tool-arrow">↗</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-mono">© Susumu Hirakawa · ssmhrkw · GitHub Pages</div>
+    <div class="footer-mono" style="color:var(--border-accent);">Building Acoustics · Impact Sound · Signal Processing</div>
+  </footer>
+
+</div>
+
+<!-- Wave Animation -->
+<script>
+(function() {
+  const el = document.getElementById('email-link');
+  if (el) { const e = ['s-hirakawa', 'kenken.go.jp'].join(String.fromCharCode(64)); el.href = 'mailto:' + e; el.textContent = e; }
+})();
+</script>
+<script>
+(function() {
+  const canvas = document.getElementById('wave-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h, t = 0;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const waves = [
+    { freq: 0.003, amp: 60, speed: 0.4, phase: 0, y: 0.25 },
+    { freq: 0.005, amp: 40, speed: 0.6, phase: 1.2, y: 0.5 },
+    { freq: 0.002, amp: 80, speed: 0.25, phase: 2.4, y: 0.75 },
+    { freq: 0.007, amp: 30, speed: 0.8, phase: 0.7, y: 0.38 },
+    { freq: 0.004, amp: 50, speed: 0.5, phase: 3.1, y: 0.62 },
+  ];
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    t += 0.008;
+
+    waves.forEach((wave, i) => {
+      ctx.beginPath();
+      const baseY = h * wave.y;
+      for (let x = 0; x <= w; x += 2) {
+        const y = baseY + Math.sin(x * wave.freq + t * wave.speed + wave.phase) * wave.amp
+                        + Math.sin(x * wave.freq * 1.7 + t * wave.speed * 0.6 + wave.phase + 1) * wave.amp * 0.4;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      const alpha = 0.3 + 0.2 * Math.sin(t * 0.3 + i);
+      ctx.strokeStyle = i % 2 === 0
+        ? `rgba(74,143,255,${alpha})`
+        : `rgba(100,180,255,${alpha * 0.6})`;
+      ctx.lineWidth = i % 3 === 0 ? 1.5 : 0.8;
+      ctx.stroke();
+    });
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+
+</body>
+</html>
